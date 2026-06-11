@@ -2376,9 +2376,23 @@
     transform: translateX(0);
   }
   
-  .nav-links a {
+  .navbar.glass-dark .nav-links a {
     font-size: 1.35rem;
     font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    width: 100%;
+    display: block;
+  }
+  
+  .navbar.glass-dark .nav-links a:hover,
+  .navbar.glass-dark .nav-links a.active-page {
+    color: var(--brand-pink);
+  }
+  
+  .navbar.glass-dark .nav-links a::after {
+    display: none;
   }
   
   .mobile-only-link {
