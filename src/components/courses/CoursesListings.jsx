@@ -17,7 +17,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
         <div className="container course-details-stack">
           
           {/* Graphic Design */}
-          <div className="course-listing-row glass">
+          <div id="graphic-design" className="course-listing-row glass">
             <div className="listing-text">
               <span className="course-label-badge">SINGLE PROGRAM • 30 DAYS</span>
               <h2>Graphic Designing Course</h2>
@@ -72,7 +72,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
           </div>
 
           {/* Video Editing */}
-          <div className="course-listing-row glass">
+          <div id="video-editing" className="course-listing-row glass">
             <div className="listing-text">
               <span className="course-label-badge">SINGLE PROGRAM • 30 DAYS</span>
               <h2>Video Editing Course</h2>
@@ -121,7 +121,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
           </div>
 
           {/* Social Media Marketing */}
-          <div className="course-listing-row glass">
+          <div id="social-media-marketing" className="course-listing-row glass">
             <div className="listing-text">
               <span className="course-label-badge">SINGLE PROGRAM • 45 DAYS</span>
               <h2>Social Media Marketing</h2>
@@ -172,15 +172,16 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
           </div>
 
           {/* Performance Marketing */}
-          <div className="course-listing-row glass">
+          <div id="performance-marketing" className="course-listing-row glass">
             <div className="listing-text">
               <span className="course-label-badge">SINGLE PROGRAM • 30 DAYS</span>
               <h2>Performance Marketing</h2>
               <p className="outcome-tag">Meta Ads | Google Ads | Analytics</p>
               <p className="price-tag gold-text">₹29,999/-</p>
-              <div className="software-row-listing">
-                <Icons.Meta />
-                <Icons.Google />
+              <div className="software-row-listing ads-platform-row">
+                <Icons.MetaAds />
+                <div className="platform-vertical-divider"></div>
+                <Icons.GoogleAds />
               </div>
               
               <div className="detailed-syllabus-split">
@@ -221,7 +222,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
           </div>
 
           {/* Cinematography & Shooting */}
-          <div className="course-listing-row glass">
+          <div id="cinematography" className="course-listing-row glass">
             <div className="listing-text">
               <span className="course-label-badge">SINGLE PROGRAM • 45 DAYS</span>
               <h2>Cinematography & Shooting</h2>

@@ -100,7 +100,7 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigateTo('courses')} className="btn btn-secondary btn-full">View Details</button>
+            <button onClick={() => navigateTo('courses', 'graphic-design')} className="btn btn-secondary btn-full">View Details</button>
           </div>
 
           {/* Video Editing */}
@@ -187,7 +187,7 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigateTo('courses')} className="btn btn-secondary btn-full">View Details</button>
+            <button onClick={() => navigateTo('courses', 'video-editing')} className="btn btn-secondary btn-full">View Details</button>
           </div>
 
           {/* Cinematography */}
@@ -325,7 +325,7 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigateTo('courses')} className="btn btn-secondary btn-full">View Details</button>
+            <button onClick={() => navigateTo('courses', 'cinematography')} className="btn btn-secondary btn-full">View Details</button>
           </div>
 
           {/* Social Media Marketing */}
@@ -415,7 +415,7 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigateTo('courses')} className="btn btn-secondary btn-full">View Details</button>
+            <button onClick={() => navigateTo('courses', 'social-media-marketing')} className="btn btn-secondary btn-full">View Details</button>
           </div>
 
           {/* Performance Marketing */}
@@ -434,9 +434,10 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
             
             <div className="card-body-inner">
               <div className="card-section-label">PLATFORMS COVERED</div>
-              <div className="mini-software-row">
-                <Icons.Meta />
-                <Icons.Google />
+              <div className="mini-software-row ads-platform-row">
+                <Icons.MetaAds />
+                <div className="platform-vertical-divider"></div>
+                <Icons.GoogleAds />
               </div>
 
               <div className="card-section-wrapper">
@@ -501,7 +502,7 @@ export const CoursesHome = ({ navigateTo, triggerModal }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigateTo('courses')} className="btn btn-secondary btn-full">View Details</button>
+            <button onClick={() => navigateTo('courses', 'performance-marketing')} className="btn btn-secondary btn-full">View Details</button>
           </div>
 
         </div>

@@ -61,9 +61,28 @@ export default function App() {
   const [consultationForm, setConsultationForm] = useState({ name: '', phone: '', email: '', course: 'General Consultation', message: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  // Auto-scroll to top when page changes
+  const scrollTargetRef = useRef(null);
+
+  // Auto-scroll when page changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const target = scrollTargetRef.current;
+    if (target) {
+      const element = document.getElementById(target);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const timer = setTimeout(() => {
+          const el = document.getElementById(target);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+      scrollTargetRef.current = null; // reset
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [currentPage]);
 
   // Monitor scroll height to show Mobile Sticky CTA
@@ -140,9 +159,19 @@ export default function App() {
   };
 
   // Switch page handler
-  const navigateTo = (pageId) => {
+  const navigateTo = (pageId, anchorId = null) => {
+    scrollTargetRef.current = anchorId;
     setCurrentPage(pageId);
     setIsMobileMenuOpen(false);
+
+    // If we are navigating to the same page, we can scroll immediately
+    if (currentPage === pageId && anchorId) {
+      const element = document.getElementById(anchorId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        scrollTargetRef.current = null; // reset
+      }
+    }
   };
 
   // Data mapping for sections

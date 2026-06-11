@@ -16,8 +16,11 @@ export const Footer = ({ navigateTo }) => {
         
         <div className="footer-links-col">
           <h4>Programs</h4>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses'); }}>Graphic Design</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses'); }}>Video Editing</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses', 'graphic-design'); }}>Graphic Design</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses', 'video-editing'); }}>Video Editing</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses', 'cinematography'); }}>Cinematography</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses', 'social-media-marketing'); }}>Social Media Marketing</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('courses', 'performance-marketing'); }}>Performance Marketing</a>
         </div>
 
         <div className="footer-links-col">

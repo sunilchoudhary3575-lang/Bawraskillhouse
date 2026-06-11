@@ -60,6 +60,12 @@ html {
   box-sizing: inherit;
 }
 
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 body {
   margin: 0;
   padding: 0;

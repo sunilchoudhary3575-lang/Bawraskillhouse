@@ -8,7 +8,7 @@ export const Hero = ({ triggerModal }) => {
   return (
     <section className="hero-section">
       <div className="container hero-grid">
-        <div className="hero-text-content">
+        <div className="hero-text-top">
           <div className="academy-badge">
             Jodhpur, Rajasthan · Offline · Practical · Career-Ready
           </div>
@@ -42,7 +42,15 @@ export const Hero = ({ triggerModal }) => {
               </div>
             </div>
           </div>
+        </div>
 
+        <div className="hero-media-wrapper">
+          <div className="hero-frame">
+            <img src={media.heroWorkspace} alt="Luxury Studio Workspace" className="hero-image" />
+          </div>
+        </div>
+
+        <div className="hero-bottom-content">
           <div className="hero-actions">
             <button onClick={() => triggerModal('General Consultation')} className="btn btn-primary">Enroll Now</button>
             <button onClick={() => triggerModal('Brochure Request')} className="btn btn-outline">
@@ -60,12 +68,6 @@ export const Hero = ({ triggerModal }) => {
               <div className="software-item-badge"><Icons.AfterEffects /></div>
               <div className="software-item-badge"><Icons.Davinci /></div>
             </div>
-          </div>
-        </div>
-
-        <div className="hero-media-wrapper">
-          <div className="hero-frame">
-            <img src={media.heroWorkspace} alt="Luxury Studio Workspace" className="hero-image" />
           </div>
         </div>
       </div>

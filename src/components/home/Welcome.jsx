@@ -12,7 +12,7 @@ export const Welcome = ({ navigateTo }) => {
     if (isHovered) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
-    }, 5000);
+    }, 2500);
     return () => clearInterval(interval);
   }, [isHovered]);
 
@@ -27,6 +27,14 @@ export const Welcome = ({ navigateTo }) => {
   return (
     <section className="welcome-section">
       <div className="container welcome-grid">
+        <div className="welcome-text-top">
+          <span className="section-subtitle">WELCOME TO ACADEMY</span>
+          <h2>Welcome to Bawra Skill House</h2>
+          <p>
+            Ek aisa jagah jahan passion ko profession mein badla jaata hai. Bawra Skillhouse mein sirf theory nahi hoti — yahan real projects hote hain, real mentors hote hain, aur real results milte hain. Offline classes. Hands-on training. Jodhpur, Rajasthan.
+          </p>
+        </div>
+
         <div
           className="welcome-image-frame"
           onMouseEnter={() => setIsHovered(true)}
@@ -60,12 +68,8 @@ export const Welcome = ({ navigateTo }) => {
             ))}
           </div>
         </div>
-        <div className="welcome-text">
-          <span className="section-subtitle">WELCOME TO ACADEMY</span>
-          <h2>Welcome to Bawra Skill House</h2>
-          <p>
-            Ek aisa jagah jahan passion ko profession mein badla jaata hai. Bawra Skillhouse mein sirf theory nahi hoti — yahan real projects hote hain, real mentors hote hain, aur real results milte hain. Offline classes. Hands-on training. Jodhpur, Rajasthan.
-          </p>
+
+        <div className="welcome-text-bottom">
           <ul className="welcome-points">
             <li><span className="bullet-dot"></span> Expert Trainers</li>
             <li><span className="bullet-dot"></span> Real Projects</li>

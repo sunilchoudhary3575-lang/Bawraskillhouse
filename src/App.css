@@ -647,8 +647,26 @@
 .hero-grid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 4rem;
+  grid-template-rows: auto auto;
+  column-gap: 4rem;
+  row-gap: 0;
   align-items: center;
+}
+
+.hero-text-top {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.hero-media-wrapper {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+}
+
+.hero-bottom-content {
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .academy-badge {
@@ -774,6 +792,8 @@
 }
 
 .hero-frame {
+  margin-left: auto;
+  margin-right: auto;
   width: 100%;
   max-width: 540px;
   aspect-ratio: 4/3;
@@ -800,11 +820,14 @@
 .welcome-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5rem;
+  column-gap: 5rem;
+  row-gap: 0;
   align-items: center;
 }
 
 .welcome-image-frame {
+  grid-column: 1;
+  grid-row: 1 / 3;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12), var(--shadow-hover);
@@ -936,11 +959,27 @@
   margin: 0;
 }
 
-.welcome-text {
+.welcome-text,
+.welcome-text-top,
+.welcome-text-bottom {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1.25rem;
+}
+
+.welcome-text-top {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  padding-bottom: 0.75rem;
+}
+
+.welcome-text-bottom {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  padding-top: 0.75rem;
 }
 
 .welcome-points {
@@ -1189,7 +1228,7 @@
 
 .why-grid-home {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
   margin-top: 4rem;
 }
@@ -1205,6 +1244,15 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.why-card h3,
+.why-card p,
+.why-card .why-icon {
+  position: relative;
+  z-index: 1;
 }
 
 .why-icon {
@@ -2315,17 +2363,47 @@
 
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    grid-template-rows: auto;
+    gap: 2.5rem;
+  }
+
+  .hero-text-top {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .hero-media-wrapper {
-    order: -1;
-    margin-bottom: 1.5rem;
+    grid-column: auto;
+    grid-row: auto;
+    margin-bottom: 2rem;
+  }
+
+  .hero-bottom-content {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .welcome-grid {
     grid-template-columns: 1fr;
-    gap: 3.5rem;
+    grid-template-rows: auto;
+    gap: 2rem;
+  }
+
+  .welcome-image-frame {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .welcome-text-top {
+    grid-column: auto;
+    grid-row: auto;
+    padding-bottom: 0;
+  }
+
+  .welcome-text-bottom {
+    grid-column: auto;
+    grid-row: auto;
+    padding-top: 0;
   }
 
   .courses-home-grid {
@@ -2451,16 +2529,73 @@
     display: inline-flex;
   }
 
-  .nav-container {
-    padding: 0 1.5rem;
-  }
-
   .section-title {
-    font-size: 1.85rem;
+    font-size: 2.25rem;
   }
 
   .hero-headline {
-    font-size: 2.15rem;
+    font-size: 2.75rem;
+    text-align: center !important;
+  }
+
+  .hero-text-top {
+    text-align: center;
+    width: 100%;
+  }
+
+  .academy-badge {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-subheadline {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-ticker-container.vertical {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-ticker-vertical-line {
+    font-size: 0.8rem !important;
+    padding: 0 0.75rem !important;
+  }
+
+  .hero-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16/9 !important;
+    border-radius: var(--radius-md) !important;
+    overflow: hidden !important;
+    margin: 0 auto 2rem !important;
+  }
+
+  .hero-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+  }
+
+  .hero-bottom-content {
+    width: 100%;
+    text-align: center;
+  }
+
+  .hero-actions {
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .software-integration {
+    text-align: center;
+  }
+
+  .software-icons-list {
+    justify-content: center !important;
   }
 
   .welcome-points {
@@ -2472,11 +2607,34 @@
   }
 
   .who-can-join-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .join-card {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .join-card h3 {
+    font-size: 1.05rem !important;
+  }
+
+  .join-card.youth-card {
+    grid-column: span 2 !important;
   }
 
   .why-grid-home {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .why-card {
+    padding: 1.5rem 1rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .why-card h3 {
+    font-size: 1.1rem !important;
   }
 
   .reviews-grid-home {
@@ -2578,16 +2736,8 @@
     padding-bottom: 60px;
   }
 
-  .nav-container {
-    padding: 0 1rem;
-  }
-
-  .section-title {
-    font-size: 1.65rem;
-  }
-
   .hero-headline {
-    font-size: 1.85rem;
+    font-size: 2.25rem;
   }
 
   .hero-actions {
@@ -3009,7 +3159,7 @@
 
 @media (max-width: 768px) {
   .about-hero-title {
-    font-size: 2.15rem;
+    font-size: 2.75rem;
   }
 
   .mission-vision-grid {
@@ -3022,7 +3172,7 @@
   }
 
   .founder-name {
-    font-size: 1.85rem;
+    font-size: 2.25rem;
   }
 
   .about-closing-section {
@@ -3031,13 +3181,13 @@
   }
 
   .about-closing-section h2 {
-    font-size: 1.85rem;
+    font-size: 2.25rem;
   }
 }
 
 @media (max-width: 640px) {
   .about-hero-title {
-    font-size: 1.85rem;
+    font-size: 2.25rem;
   }
 
   .about-hero-subtitle {
@@ -4237,7 +4387,7 @@
   display: block;
   max-width: 580px;
   border: 1px solid var(--border-gold);
-  background: #0a0e29;
+  background: #f1f1f5;
   border-radius: 8px;
   margin-top: -1.5rem;
   margin-bottom: 2rem;
@@ -4797,6 +4947,9 @@
     margin-bottom: 2rem !important;
     max-width: 100% !important;
     line-height: 1.5 !important;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .hero-actions {
@@ -4830,17 +4983,6 @@
   }
 }
 
-@media (max-width: 640px) {
-  .who-can-join-grid {
-    grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
-  }
-
-  .why-grid-home {
-    grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
-  }
-}
 
 /* 4. General Mobile Smoothing Overrides */
 html,
@@ -4853,4 +4995,258 @@ body {
 .bawra-academy {
   overflow-x: hidden !important;
   width: 100%;
+}
+
+/* 5. Course Cards Scroll-Driven Animation (Mobile Only) */
+@supports (animation-timeline: view()) {
+  @media (max-width: 768px) {
+    .courses-home-grid {
+      perspective: 1000px;
+    }
+    
+    .course-card-home {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      animation: reveal-course-card linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 30%;
+    }
+  }
+}
+
+@keyframes reveal-course-card {
+  from {
+    opacity: 0.3;
+    transform: translateY(50px) translateZ(-40px) rotateX(12deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) rotateX(0deg);
+  }
+}
+
+/* 6. Who Can Join - Floating & Scroll-Driven Reveal Animations */
+.join-card-bg-shape {
+  animation: float-svg 6s ease-in-out infinite;
+}
+
+.join-card.student-card .join-card-bg-shape { animation-duration: 7s; animation-delay: 0.2s; }
+.join-card.freelancer-card .join-card-bg-shape { animation-duration: 8s; animation-delay: 0.5s; }
+.join-card.business-card .join-card-bg-shape { animation-duration: 6s; animation-delay: 0s; }
+.join-card.creator-card .join-card-bg-shape { animation-duration: 9s; animation-delay: 0.8s; }
+.join-card.youth-card .join-card-bg-shape { animation-duration: 7.5s; animation-delay: 0.3s; }
+
+@keyframes float-svg {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (max-width: 768px) {
+    .who-can-join-grid {
+      perspective: 1000px;
+    }
+    
+    .join-card {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      animation: reveal-join-card linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 25%;
+    }
+  }
+}
+
+@keyframes reveal-join-card {
+  from {
+    opacity: 0.1;
+    transform: translateY(40px) translateZ(-30px) rotateY(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) rotateY(0deg);
+  }
+}
+
+/* 7. Why Choose Us - Floating & Scroll-Driven Reveal Animations */
+.why-card-bg-shape {
+  position: absolute;
+  bottom: -15px;
+  right: -15px;
+  width: 130px;
+  height: 130px;
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: float-svg 7s ease-in-out infinite;
+}
+
+.why-card:hover .why-card-bg-shape {
+  transform: scale(1.15) translate(-5px, -5px);
+}
+
+.why-card:nth-child(1) .why-card-bg-shape { animation-duration: 8s; animation-delay: 0.1s; }
+.why-card:nth-child(2) .why-card-bg-shape { animation-duration: 6.5s; animation-delay: 0.4s; }
+.why-card:nth-child(3) .why-card-bg-shape { animation-duration: 7.5s; animation-delay: 0.2s; }
+.why-card:nth-child(4) .why-card-bg-shape { animation-duration: 9s; animation-delay: 0.6s; }
+.why-card:nth-child(5) .why-card-bg-shape { animation-duration: 7s; animation-delay: 0.3s; }
+.why-card:nth-child(6) .why-card-bg-shape { animation-duration: 8.5s; animation-delay: 0.5s; }
+
+@supports (animation-timeline: view()) {
+  @media (max-width: 768px) {
+    .why-grid-home {
+      perspective: 1000px;
+    }
+    
+    .why-card {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      animation: reveal-why-card linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 25%;
+    }
+  }
+}
+
+@keyframes reveal-why-card {
+  from {
+    opacity: 0.15;
+    transform: translateY(40px) translateZ(-30px) rotateX(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) rotateX(0deg);
+  }
+}
+
+/* why-card background image topic photo styling */
+.why-card-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.08;
+  z-index: 0;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: grayscale(100%);
+  pointer-events: none;
+}
+
+.why-card:hover .why-card-bg-image {
+  opacity: 0.16;
+  transform: scale(1.06);
+  filter: grayscale(20%);
+}
+
+/* ==================== FOOTER MOBILE OPTIMIZATION ==================== */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .footer-brand {
+    grid-column: span 3 !important;
+    text-align: center !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .footer-brand p {
+    text-align: center !important;
+    max-width: 420px;
+    margin: 0 auto;
+    font-size: 0.85rem !important;
+  }
+
+  .footer-links-col {
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0.4rem !important;
+  }
+
+  .footer-links-col h4 {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  .footer-links-col a,
+  .footer-links-col p {
+    font-size: 0.75rem !important;
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+    margin: 0 !important;
+  }
+
+  .footer-links-col a:hover {
+    transform: none !important;
+  }
+
+  .footer-section {
+    padding: 40px 0 25px !important;
+  }
+
+  .footer-bottom {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 1rem !important;
+    padding-top: 20px !important;
+  }
+
+  .footer-bottom p {
+    font-size: 0.75rem !important;
+  }
+
+  .footer-social-row {
+    gap: 1rem !important;
+  }
+
+  .footer-social-row a {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ==================== ADS PLATFORMS ICONS STYLING ==================== */
+.ads-platform-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.platform-vertical-divider {
+  width: 1px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 0.25rem;
+  display: inline-block;
+}
+
+.software-icon.mt-ads {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  display: inline-block !important;
+}
+
+.software-icon.gg-ads {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  display: inline-block !important;
 }

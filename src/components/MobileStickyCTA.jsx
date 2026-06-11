@@ -8,9 +8,9 @@ export const MobileStickyCTA = ({ showStickyCTA, triggerModal }) => {
           <p className="sticky-title">Bawra Skill House</p>
           <p className="sticky-subtitle">Creative Careers Consultation</p>
         </div>
-        <button onClick={() => triggerModal('Sticky Bottom Call')} className="btn btn-primary sticky-btn">
+        <a href="tel:+916377790409" className="btn btn-primary sticky-btn">
           Book Call
-        </button>
+        </a>
       </div>
     </div>
   );
