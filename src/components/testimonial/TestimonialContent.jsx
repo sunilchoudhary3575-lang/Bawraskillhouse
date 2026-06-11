@@ -159,7 +159,7 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
         <div className="container">
           <div className="section-header text-center" style={{ marginBottom: '4rem' }}>
             <span className="section-subtitle">Real Student Transformations</span>
-            <h2 className="section-title" style={{ fontSize: '2.5rem' }}>Videos & Gallery</h2>
+            <h2 className="section-title">Videos & Gallery</h2>
             <p className="section-desc" style={{ maxWidth: '650px', margin: '0 auto' }}>
               Hear directly from our alumni who started from scratch and are now working with leading brands or building high-paying freelance careers.
             </p>
@@ -284,12 +284,12 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
       </section>
 
       {/* Conversion / CTA Section */}
-      <section className="closing-cta-testimonial" style={{ padding: '0 2rem' }}>
-        <div className="portfolio-conversion-banner dark-gold-gradient text-center" style={{ margin: '5rem auto', maxWidth: '1200px' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: '900', color: '#fff', marginBottom: '1.5rem' }}>
+      <section className="closing-cta-testimonial">
+        <div className="portfolio-conversion-banner dark-gold-gradient text-center">
+          <h2>
             Agla Success Story Tumhari Ho Sakti Hai.
           </h2>
-          <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.85)', maxWidth: '800px', margin: '0 auto 3rem', lineHeight: '1.6' }}>
+          <p>
             Aaj jo students screen par nazar aa rahe hain, kal tak woh bhi ek shuruaat kar rahe the. Bas pehla kadam uthao — baaki Bawra Skillhouse sambhaal lega.
           </p>
           <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>

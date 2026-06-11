@@ -502,7 +502,7 @@
   align-items: center;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .nav-cta-mobile {
     margin-left: 2rem;
   }
@@ -1624,20 +1624,25 @@
 }
 
 .portfolio-conversion-banner {
-  margin-top: 4rem;
+  margin: 5rem auto;
+  max-width: 1200px;
   padding: 5rem 2rem;
   border-radius: var(--radius-lg);
 }
 
 .portfolio-conversion-banner h2 {
   color: #fff;
-  font-size: 2.75rem;
-  margin-bottom: 0.5rem;
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
 }
 
 .portfolio-conversion-banner p {
-  color: #9ca3af;
-  margin-bottom: 2.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
 }
 
 /* Career subpage styles */
@@ -2457,10 +2462,17 @@
   
   .portfolio-conversion-banner {
     padding: 3rem 1.5rem;
+    margin: 3rem auto;
   }
   
   .portfolio-conversion-banner h2 {
     font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .portfolio-conversion-banner p {
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
   }
   
   .career-list-item {
@@ -2495,10 +2507,10 @@
   }
 }
 
-/* Exact Mobile Width Optimizations (390px, 430px) */
-@media (max-width: 430px) {
+/* Exact Mobile Width Optimizations (Tailwind sm Breakpoint) */
+@media (max-width: 640px) {
   .container {
-    padding: 0 1.25rem;
+    padding: 0 1rem;
   }
   
   .hero-section {
@@ -2507,7 +2519,7 @@
   }
   
   .hero-headline {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
   
   .hero-actions {
@@ -2530,12 +2542,6 @@
   
   .modal-header h3 {
     font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 390px) {
-  .hero-headline {
-    font-size: 2.25rem;
   }
 }
 
@@ -2961,7 +2967,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .about-hero-title {
     font-size: 2.25rem;
   }
@@ -3652,7 +3658,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .testimonial-intro-section {
     padding: 60px 0 30px;
   }
@@ -3777,7 +3783,7 @@
   gap: 1.25rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .form-group-row {
     grid-template-columns: 1fr;
     gap: 1.25rem;
@@ -3838,7 +3844,7 @@
   margin-bottom: 0.5rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .program-selection-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -4636,7 +4642,7 @@
   width: 100%;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 640px) {
   .modal-download-buttons {
     grid-template-columns: 1fr;
   }
@@ -4682,7 +4688,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .who-can-join-grid {
     grid-template-columns: 1fr !important;
     gap: 1.5rem !important;
