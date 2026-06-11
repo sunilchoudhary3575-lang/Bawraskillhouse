@@ -74,7 +74,7 @@ export const ConsultationModal = ({
           {modalCourse === 'Brochure Request' && (
             <div className="brochure-download-modal-options mb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1.5rem', width: '100%', textAlign: 'left' }}>
               <p style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 600, textAlign: 'center' }}>Download Brochure PDFs Directly:</p>
-              <div className="modal-download-buttons" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="modal-download-buttons">
                 <a href="/Graphic_Designing_Brochure.pdf" download className="btn btn-primary text-center" style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                   🎨 Graphic Design (PDF)
                 </a>
@@ -169,7 +169,7 @@ export const ConsultationModal = ({
 
                       {showCourseSelection && (
                         <div className="program-selection-grid-wrapper">
-                          <div className="program-selection-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.85rem' }}>
+                          <div className="program-selection-grid">
                             {programs.map((prog) => {
                               const isActive = currentProgramObj && currentProgramObj.id === prog.id;
                               return (

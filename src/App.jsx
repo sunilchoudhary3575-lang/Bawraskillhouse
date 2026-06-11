@@ -69,13 +69,13 @@ export default function App() {
   // Monitor scroll height to show Mobile Sticky CTA
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowStickyCTA(true);
-      } else {
-        setShowStickyCTA(false);
-      }
+      const shouldShow = window.scrollY > 400;
+      setShowStickyCTA(prev => {
+        if (prev === shouldShow) return prev;
+        return shouldShow;
+      });
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -86,17 +86,18 @@ export default function App() {
       
       // If mobile menu is open, keep the header visible so user doesn't lose close toggle
       if (isMobileMenuOpen) {
-        setShowHeader(true);
+        setShowHeader(prev => prev ? prev : true);
         lastScrollY.current = currentScrollY;
         return;
       }
 
       // Hide header if scrolling down and scrolled more than 100px
-      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        setShowHeader(false);
-      } else {
-        setShowHeader(true);
-      }
+      const shouldHide = currentScrollY > lastScrollY.current && currentScrollY > 100;
+      setShowHeader(prev => {
+        const nextShow = !shouldHide;
+        if (prev === nextShow) return prev;
+        return nextShow;
+      });
       
       lastScrollY.current = currentScrollY;
     };

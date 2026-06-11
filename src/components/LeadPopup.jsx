@@ -12,11 +12,11 @@ export const LeadPopup = () => {
   });
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (isDismissed || formSubmitted) return;
+    if (isDismissed || formSubmitted) return;
 
+    const handleScroll = () => {
       if (window.scrollY > 200) {
-        setIsVisible(true);
+        setIsVisible(prev => prev ? prev : true);
       }
     };
 

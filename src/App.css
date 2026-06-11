@@ -2341,6 +2341,11 @@
 
 /* Mobile Responsive Framework (under 768px) */
 @media (max-width: 768px) {
+  .modal-content.premium-modal {
+    padding: 1.75rem 1.25rem;
+    border-radius: 16px;
+  }
+
   .menu-toggle {
     display: block;
     z-index: 1001;
@@ -4597,5 +4602,107 @@
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.01em;
   text-transform: uppercase;
+}
+
+
+/* ==========================================================================
+   Mobile-Oriented Responsiveness & Scroll Fixes (Added for Smooth Experience)
+   ========================================================================== */
+
+/* 1. Modal Responsiveness & Scroll Fixes */
+@media (max-width: 768px) {
+  .modal-content.premium-modal {
+    padding: 1.75rem 1.25rem;
+    border-radius: 16px;
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .modal-close {
+    top: 1rem !important;
+    right: 1rem !important;
+    font-size: 2.25rem !important;
+    color: #ffffff !important;
+    z-index: 100 !important;
+  }
+}
+
+.modal-download-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 580px) {
+  .modal-download-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2. Hero Section Mobile Fixes */
+@media (max-width: 768px) {
+  .hero-subheadline {
+    font-size: 1.05rem !important;
+    margin-bottom: 2rem !important;
+    max-width: 100% !important;
+    line-height: 1.5 !important;
+  }
+
+  .hero-actions {
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+    width: 100%;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .academy-badge {
+    font-size: 0.75rem !important;
+    padding: 0.45rem 1rem !important;
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    text-align: center !important;
+    max-width: 100% !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* 3. Grid Systems Stacking */
+@media (max-width: 768px) {
+  .courses-home-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .who-can-join-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .why-grid-home {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* 4. General Mobile Smoothing Overrides */
+html, body {
+  overflow-x: hidden !important;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+.bawra-academy {
+  overflow-x: hidden !important;
+  width: 100%;
 }
 
