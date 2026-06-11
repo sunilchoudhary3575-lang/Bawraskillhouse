@@ -51,6 +51,9 @@ html {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 *, *:before, *:after {
@@ -64,6 +67,8 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
   line-height: 1.6;
 }
 
