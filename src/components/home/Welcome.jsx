@@ -71,10 +71,10 @@ export const Welcome = ({ navigateTo }) => {
 
         <div className="welcome-text-bottom">
           <ul className="welcome-points">
-            <li><span className="bullet-dot"></span> Expert Trainers</li>
-            <li><span className="bullet-dot"></span> Real Projects</li>
-            <li><span className="bullet-dot"></span> 100% Practical Training</li>
-            <li><span className="bullet-dot"></span> Placement Assistance</li>
+            <li><span className="bullet-sticker sticker-pink">🎓</span> Expert Trainers</li>
+            <li><span className="bullet-sticker sticker-navy">💼</span> Real Projects</li>
+            <li><span className="bullet-sticker sticker-gold">💻</span> 100% Practical Training</li>
+            <li><span className="bullet-sticker sticker-purple">🤝</span> Placement Assistance</li>
           </ul>
           <button onClick={() => navigateTo('about')} className="btn btn-primary">About Us</button>
         </div>

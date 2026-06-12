@@ -6,15 +6,16 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
   const { media } = useMedia();
   return (
     <>
-      <section className="breadcrumb-banner">
-        <div className="container text-center">
-          <h1>Courses</h1>
-          <p className="breadcrumb-path"><span onClick={() => navigateTo('home')} style={{ cursor: 'pointer' }}>Home</span> &gt; Courses</p>
-        </div>
-      </section>
-
       <section className="courses-listings-section">
-        <div className="container course-details-stack">
+        <div className="container">
+          
+          <div className="section-header text-center" style={{ marginBottom: '4rem' }}>
+            <span className="section-subtitle">OUR PROGRAMS</span>
+            <h2 className="section-title">Our Professional Courses</h2>
+            <p className="section-desc">In-depth offline programs taught directly by industry practitioners</p>
+          </div>
+
+          <div className="course-details-stack">
           
           {/* Graphic Design */}
           <div id="graphic-design" className="course-listing-row glass">
@@ -273,9 +274,9 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
             </div>
           </div>
 
-
         </div>
-      </section>
+      </div>
+    </section>
     </>
   );
 };

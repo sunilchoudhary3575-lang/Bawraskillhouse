@@ -105,7 +105,7 @@ export const MEDIA_ITEMS = [
     label: 'Graphic Designing Course Workstation',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=600&q=80',
+    default: 'https://images.unsplash.com/photo-1561070791-26c113006238?auto=format&fit=crop&w=600&q=80',
   },
   {
     key: 'course_video',
@@ -230,7 +230,12 @@ export const MediaProvider = ({ children }) => {
     // Generate initial state combining defaults & localStorage overrides
     const initialMedia = {};
     MEDIA_ITEMS.forEach(item => {
-      const stored = localStorage.getItem(`bawra_media_${item.key}`);
+      let stored = localStorage.getItem(`bawra_media_${item.key}`);
+      // Bust old pen/book course_graphic image to load the new premium technical design monitor image
+      if (item.key === 'course_graphic' && stored && stored.includes('photo-1581291518633-83b4ebd1d83e')) {
+        localStorage.removeItem('bawra_media_course_graphic');
+        stored = null;
+      }
       initialMedia[item.key] = stored || item.default;
     });
     return initialMedia;
