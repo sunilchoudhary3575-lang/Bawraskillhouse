@@ -2464,6 +2464,10 @@
 
 /* Mobile Responsive Framework (under 768px) */
 @media (max-width: 768px) {
+  .nav-container {
+    padding: 0 1rem !important;
+  }
+
   .modal-content.premium-modal {
     padding: 1.75rem 1.25rem;
     border-radius: 16px;
@@ -2722,6 +2726,10 @@
     right: 20px;
     width: 48px;
     height: 48px;
+  }
+
+  .course-listing-row {
+    padding: 1.5rem !important;
   }
 }
 
@@ -4973,6 +4981,7 @@
     max-width: 100% !important;
     line-height: 1.4 !important;
   }
+
 }
 
 /* 3. Grid Systems Stacking */
@@ -5003,7 +5012,7 @@ body {
     .courses-home-grid {
       perspective: 1000px;
     }
-    
+
     .course-card-home {
       transform-style: preserve-3d;
       backface-visibility: hidden;
@@ -5019,6 +5028,7 @@ body {
     opacity: 0.3;
     transform: translateY(50px) translateZ(-40px) rotateX(12deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) translateZ(0) rotateX(0deg);
@@ -5030,19 +5040,40 @@ body {
   animation: float-svg 6s ease-in-out infinite;
 }
 
-.join-card.student-card .join-card-bg-shape { animation-duration: 7s; animation-delay: 0.2s; }
-.join-card.freelancer-card .join-card-bg-shape { animation-duration: 8s; animation-delay: 0.5s; }
-.join-card.business-card .join-card-bg-shape { animation-duration: 6s; animation-delay: 0s; }
-.join-card.creator-card .join-card-bg-shape { animation-duration: 9s; animation-delay: 0.8s; }
-.join-card.youth-card .join-card-bg-shape { animation-duration: 7.5s; animation-delay: 0.3s; }
+.join-card.student-card .join-card-bg-shape {
+  animation-duration: 7s;
+  animation-delay: 0.2s;
+}
+
+.join-card.freelancer-card .join-card-bg-shape {
+  animation-duration: 8s;
+  animation-delay: 0.5s;
+}
+
+.join-card.business-card .join-card-bg-shape {
+  animation-duration: 6s;
+  animation-delay: 0s;
+}
+
+.join-card.creator-card .join-card-bg-shape {
+  animation-duration: 9s;
+  animation-delay: 0.8s;
+}
+
+.join-card.youth-card .join-card-bg-shape {
+  animation-duration: 7.5s;
+  animation-delay: 0.3s;
+}
 
 @keyframes float-svg {
   0% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-6px) rotate(3deg);
   }
+
   100% {
     transform: translateY(0px) rotate(0deg);
   }
@@ -5053,7 +5084,7 @@ body {
     .who-can-join-grid {
       perspective: 1000px;
     }
-    
+
     .join-card {
       transform-style: preserve-3d;
       backface-visibility: hidden;
@@ -5069,6 +5100,7 @@ body {
     opacity: 0.1;
     transform: translateY(40px) translateZ(-30px) rotateY(-10deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) translateZ(0) rotateY(0deg);
@@ -5092,19 +5124,42 @@ body {
   transform: scale(1.15) translate(-5px, -5px);
 }
 
-.why-card:nth-child(1) .why-card-bg-shape { animation-duration: 8s; animation-delay: 0.1s; }
-.why-card:nth-child(2) .why-card-bg-shape { animation-duration: 6.5s; animation-delay: 0.4s; }
-.why-card:nth-child(3) .why-card-bg-shape { animation-duration: 7.5s; animation-delay: 0.2s; }
-.why-card:nth-child(4) .why-card-bg-shape { animation-duration: 9s; animation-delay: 0.6s; }
-.why-card:nth-child(5) .why-card-bg-shape { animation-duration: 7s; animation-delay: 0.3s; }
-.why-card:nth-child(6) .why-card-bg-shape { animation-duration: 8.5s; animation-delay: 0.5s; }
+.why-card:nth-child(1) .why-card-bg-shape {
+  animation-duration: 8s;
+  animation-delay: 0.1s;
+}
+
+.why-card:nth-child(2) .why-card-bg-shape {
+  animation-duration: 6.5s;
+  animation-delay: 0.4s;
+}
+
+.why-card:nth-child(3) .why-card-bg-shape {
+  animation-duration: 7.5s;
+  animation-delay: 0.2s;
+}
+
+.why-card:nth-child(4) .why-card-bg-shape {
+  animation-duration: 9s;
+  animation-delay: 0.6s;
+}
+
+.why-card:nth-child(5) .why-card-bg-shape {
+  animation-duration: 7s;
+  animation-delay: 0.3s;
+}
+
+.why-card:nth-child(6) .why-card-bg-shape {
+  animation-duration: 8.5s;
+  animation-delay: 0.5s;
+}
 
 @supports (animation-timeline: view()) {
   @media (max-width: 768px) {
     .why-grid-home {
       perspective: 1000px;
     }
-    
+
     .why-card {
       transform-style: preserve-3d;
       backface-visibility: hidden;
@@ -5120,6 +5175,7 @@ body {
     opacity: 0.15;
     transform: translateY(40px) translateZ(-30px) rotateX(-8deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) translateZ(0) rotateX(0deg);
@@ -5152,8 +5208,12 @@ body {
 @media (max-width: 768px) {
   .footer-grid {
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 0.75rem !important;
+    gap: 0.5rem !important;
     margin-bottom: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   .footer-brand {
@@ -5175,20 +5235,27 @@ body {
     align-items: center !important;
     text-align: center !important;
     gap: 0.4rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
 
   .footer-links-col h4 {
-    font-size: 0.85rem !important;
+    font-size: 0.825rem !important;
     margin-bottom: 0.2rem !important;
   }
 
   .footer-links-col a,
   .footer-links-col p {
-    font-size: 0.75rem !important;
+    font-size: 0.7rem !important;
     word-break: break-all !important;
     overflow-wrap: anywhere !important;
     white-space: normal !important;
     margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .footer-links-col a:hover {
@@ -5249,4 +5316,301 @@ body {
   border-radius: 0 !important;
   background: transparent !important;
   display: inline-block !important;
+}
+
+/* ==================== SCREEN SPECIFIC OPTIMIZATION (max-width: 480px) ==================== */
+@media (max-width: 480px) {
+
+  /* Container padding */
+  .container {
+    padding: 0 0.75rem !important;
+  }
+
+  /* Hero section overrides for mobile */
+  .hero-section {
+    padding-top: 110px !important;
+    padding-bottom: 40px !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  /* Headlines & Section headers */
+  .hero-headline {
+    font-size: 1.95rem !important;
+    line-height: 1.2 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .hero-subheadline {
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 1.5rem !important;
+    padding: 0 0.25rem !important;
+  }
+
+  .btn {
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.9rem !important;
+    gap: 0.35rem !important;
+  }
+
+  .btn-enroll-today {
+    padding: 0.55rem 1.25rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .hero-actions {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0.75rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+
+  .hero-ticker-container.vertical {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-top: -1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .hero-ticker-vertical-line {
+    font-size: 0.75rem !important;
+    padding: 0 0.5rem !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .hero-media-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .hero-frame {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .section-title {
+    font-size: 1.85rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .section-desc {
+    font-size: 0.95rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  /* Who Can Join Grid & Cards */
+  .who-can-join-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .join-card {
+    padding: 1rem 0.65rem !important;
+    border-radius: 16px !important;
+  }
+
+  .join-card h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .join-card p {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .join-icon {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  /* Why Choose Us Grid & Cards */
+  .why-grid-home {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .why-card {
+    padding: 1rem 0.65rem !important;
+    border-radius: 16px !important;
+    gap: 0.5rem !important;
+  }
+
+  .why-card h3 {
+    font-size: 0.9rem !important;
+  }
+
+  .why-card p {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .why-icon {
+    font-size: 1.5rem !important;
+  }
+
+  /* Courses Homepage Cards */
+  .course-card-home {
+    padding: 1.25rem 1rem !important;
+    border-radius: 20px !important;
+  }
+
+  .course-card-home h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .card-bullets li {
+    font-size: 0.78rem !important;
+  }
+
+  /* Footer adjustments */
+  .footer-brand p {
+    font-size: 0.8rem !important;
+    max-width: 100% !important;
+  }
+
+  .footer-links-col h4 {
+    font-size: 0.75rem !important;
+  }
+
+  .footer-links-col a,
+  .footer-links-col p {
+    font-size: 0.65rem !important;
+  }
+}
+
+/* ==================== EXTRA MOBILE SCREEN OPTIMIZATION (max-width: 360px) ==================== */
+@media (max-width: 360px) {
+  /* Global page containers padding */
+  .container {
+    padding: 0 0.5rem !important;
+  }
+
+  /* Header adjustments to prevent right-side push */
+  .nav-container {
+    padding: 0 0.5rem !important;
+  }
+
+  .brand-logo-img {
+    height: 36px !important;
+  }
+
+  .nav-admin-trigger {
+    width: 36px !important;
+    height: 36px !important;
+    margin-left: 0.25rem !important;
+  }
+
+  /* Page headers & titles */
+  .hero-headline {
+    font-size: 1.85rem !important;
+  }
+
+  .section-title {
+    font-size: 1.6rem !important;
+  }
+
+  .hero-subheadline {
+    font-size: 0.95rem !important;
+  }
+
+  /* Who Can Join - ultra mobile spacing */
+  .who-can-join-grid {
+    gap: 0.4rem !important;
+  }
+
+  .join-card {
+    padding: 0.75rem 0.4rem !important;
+    border-radius: 12px !important;
+  }
+
+  .join-card h3 {
+    font-size: 0.78rem !important;
+  }
+
+  .join-card p {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .join-icon {
+    font-size: 1.25rem !important;
+  }
+
+  /* Why Choose Us - ultra mobile spacing */
+  .why-grid-home {
+    gap: 0.4rem !important;
+  }
+
+  .why-card {
+    padding: 0.75rem 0.4rem !important;
+    border-radius: 12px !important;
+    gap: 0.4rem !important;
+  }
+
+  .why-card h3 {
+    font-size: 0.78rem !important;
+  }
+
+  .why-card p {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .why-icon {
+    font-size: 1.25rem !important;
+  }
+
+  /* Courses page layout overrides */
+  .course-listing-row {
+    padding: 0.75rem !important;
+    gap: 1rem !important;
+    border-radius: 12px !important;
+  }
+
+  .about-closing-section {
+    padding: 2rem 0.75rem !important;
+    margin: 1rem 0.5rem !important;
+  }
+
+  /* Popups and Modals formatting */
+  .lead-ad-popup {
+    padding: 1rem !important;
+  }
+
+  .modal-overlay {
+    padding: 0.25rem !important;
+  }
+
+  .modal-content.premium-modal {
+    padding: 1.25rem 0.75rem !important;
+  }
+
+  /* Footer compact font sizes */
+  .footer-grid {
+    gap: 0.35rem !important;
+  }
+
+  .footer-links-col h4 {
+    font-size: 0.7rem !important;
+  }
+
+  .footer-links-col a,
+  .footer-links-col p {
+    font-size: 0.625rem !important;
+  }
+
+  /* Admin control panel wraps */
+  .control-panel-bright,
+  .input-row-bright input {
+    min-width: 100% !important;
+  }
+
+  .dashboard-card-bright {
+    padding: 1rem 0.5rem !important;
+  }
 }
