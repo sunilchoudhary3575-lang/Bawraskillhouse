@@ -2614,7 +2614,24 @@
   }
 
   .courses-home-grid {
-    grid-template-columns: 1fr 1fr;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    grid-template-columns: none !important;
+    gap: 1.5rem !important;
+    margin-left: -1.5rem !important;
+    margin-right: -1.5rem !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    scroll-padding-left: 1.5rem !important;
+    scroll-padding-right: 1.5rem !important;
+  }
+  .course-card-home {
+    width: 310px !important;
+    min-width: 310px !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
   }
 
   .why-grid-home {
@@ -2825,7 +2842,24 @@
   }
 
   .courses-home-grid {
-    grid-template-columns: 1fr;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    grid-template-columns: none !important;
+    gap: 1rem !important;
+    margin-left: -1rem !important;
+    margin-right: -1rem !important;
+    padding-left: 1.75rem !important;
+    padding-right: 1.75rem !important;
+    scroll-padding-left: 1.75rem !important;
+    scroll-padding-right: 1.75rem !important;
+  }
+  .course-card-home {
+    width: 285px !important;
+    min-width: 285px !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
   }
 
   .who-can-join-grid {
@@ -5506,8 +5540,12 @@
 /* 3. Grid Systems Stacking */
 @media (max-width: 768px) {
   .courses-home-grid {
-    grid-template-columns: 1fr !important;
-    gap: 2rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    grid-template-columns: none !important;
+    gap: 1rem !important;
   }
 }
 
@@ -6082,7 +6120,10 @@ body {
   .course-card-home {
     padding: 1.25rem 1rem !important;
     border-radius: 20px !important;
-    min-width: 0 !important;
+    width: 275px !important;
+    min-width: 275px !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
   }
 
   .card-header-top {
