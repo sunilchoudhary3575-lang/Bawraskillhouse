@@ -7,7 +7,7 @@ export const Logo = () => (
       src={logoImg} 
       alt="Bawra Skill House Logo" 
       className="brand-logo-img" 
-      style={{ height: '42px', width: 'auto', objectFit: 'contain', display: 'block' }}
+      style={{ width: 'auto', objectFit: 'contain', display: 'block' }}
     />
   </div>
 );
