@@ -105,7 +105,7 @@ export const MEDIA_ITEMS = [
     label: 'Graphic Designing Course Workstation',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1561070791-26c113006238?auto=format&fit=crop&w=600&q=80',
+    default: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80',
   },
   {
     key: 'course_video',
@@ -225,6 +225,56 @@ export const MEDIA_ITEMS = [
   },
 ];
 
+const dbName = 'BawraMediaDB';
+const storeName = 'media';
+
+const getDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const saveToDB = async (key, val) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.put(val, key);
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const getFromDB = async (key) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.get(key);
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const deleteFromDB = async (key) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
 export const MediaProvider = ({ children }) => {
   const [media, setMedia] = useState(() => {
     // Generate initial state combining defaults & localStorage overrides
@@ -232,7 +282,7 @@ export const MediaProvider = ({ children }) => {
     MEDIA_ITEMS.forEach(item => {
       let stored = localStorage.getItem(`bawra_media_${item.key}`);
       // Bust old pen/book course_graphic image to load the new premium technical design monitor image
-      if (item.key === 'course_graphic' && stored && stored.includes('photo-1581291518633-83b4ebd1d83e')) {
+      if (item.key === 'course_graphic' && stored && (stored.includes('photo-1581291518633-83b4ebd1d83e') || stored.includes('photo-1561070791-26c113006238'))) {
         localStorage.removeItem('bawra_media_course_graphic');
         stored = null;
       }
@@ -241,28 +291,81 @@ export const MediaProvider = ({ children }) => {
     return initialMedia;
   });
 
-  const updateMedia = (key, value) => {
-    if (value && value.trim() !== '') {
+  useEffect(() => {
+    const loadIndexedDBMedia = async () => {
+      const updatedMedia = { ...media };
+      let changed = false;
+      for (const item of MEDIA_ITEMS) {
+        const stored = localStorage.getItem(`bawra_media_${item.key}`);
+        if (stored === 'indexeddb_blob') {
+          try {
+            const blob = await getFromDB(item.key);
+            if (blob) {
+              updatedMedia[item.key] = URL.createObjectURL(blob);
+              changed = true;
+            }
+          } catch (err) {
+            console.error("Failed to read blob from IndexedDB for:", item.key, err);
+          }
+        }
+      }
+      if (changed) {
+        setMedia(updatedMedia);
+      }
+    };
+    loadIndexedDBMedia();
+  }, []);
+
+  const updateMedia = async (key, value) => {
+    if (value instanceof File || value instanceof Blob) {
+      try {
+        await saveToDB(key, value);
+        const objectUrl = URL.createObjectURL(value);
+        localStorage.setItem(`bawra_media_${key}`, 'indexeddb_blob');
+        setMedia(prev => ({
+          ...prev,
+          [key]: objectUrl,
+        }));
+        return objectUrl;
+      } catch (err) {
+        console.error("Failed to save media to IndexedDB:", err);
+        throw err;
+      }
+    } else if (typeof value === 'string' && value.trim() !== '') {
       localStorage.setItem(`bawra_media_${key}`, value.trim());
+      try {
+        await deleteFromDB(key);
+      } catch (err) {}
       setMedia(prev => ({
         ...prev,
         [key]: value.trim(),
       }));
+      return value.trim();
     } else {
-      // If empty value is sent, treat as resetting that key
       localStorage.removeItem(`bawra_media_${key}`);
+      try {
+        await deleteFromDB(key);
+      } catch (err) {}
       const item = MEDIA_ITEMS.find(i => i.key === key);
+      const defaultVal = item ? item.default : '';
       setMedia(prev => ({
         ...prev,
-        [key]: item ? item.default : '',
+        [key]: defaultVal,
       }));
+      return defaultVal;
     }
   };
 
-  const resetMedia = () => {
+  const resetMedia = async () => {
     MEDIA_ITEMS.forEach(item => {
       localStorage.removeItem(`bawra_media_${item.key}`);
     });
+    try {
+      const db = await getDB();
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).clear();
+    } catch (err) {}
+
     const resetState = {};
     MEDIA_ITEMS.forEach(item => {
       resetState[item.key] = item.default;

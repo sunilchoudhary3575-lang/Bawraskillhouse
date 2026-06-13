@@ -6,7 +6,6 @@ export const CareerOpportunities = ({ navigateTo }) => {
       <section className="breadcrumb-banner">
         <div className="container text-center">
           <h1>Career Opportunities</h1>
-          <p className="breadcrumb-path"><span onClick={() => navigateTo('home')} style={{ cursor: 'pointer' }}>Home</span> &gt; Career</p>
         </div>
       </section>
 

@@ -5,8 +5,8 @@ export const Welcome = ({ navigateTo }) => {
   const { media } = useMedia();
   const slideshowImages = [media.welcome1, media.welcome2, media.welcome3, media.welcome4, media.welcome5];
   const [currentSlide, setCurrentSlide] = useState(0);
-
   const [isHovered, setIsHovered] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
 
   useEffect(() => {
     if (isHovered) return;
@@ -24,6 +24,25 @@ export const Welcome = ({ navigateTo }) => {
     setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
   };
 
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+
+    if (diff > 50) {
+      // Swiped Left
+      handleNext();
+    } else if (diff < -50) {
+      // Swiped Right
+      handlePrev();
+    }
+    setTouchStartX(null);
+  };
+
   return (
     <section className="welcome-section">
       <div className="container welcome-grid">
@@ -39,6 +58,8 @@ export const Welcome = ({ navigateTo }) => {
           className="welcome-image-frame"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {slideshowImages.map((imgSrc, idx) => (
             <img

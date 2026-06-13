@@ -47,7 +47,6 @@ export const AboutFounder = () => {
                   <span className="rec-number">01</span>
                   <div className="rec-detail">
                     <strong>Government of Rajasthan Recognition</strong>
-                    <p>Officially recognized by the State Government with state-level creator recognition for outstanding work in youth education.</p>
                   </div>
                 </div>
 
@@ -55,7 +54,6 @@ export const AboutFounder = () => {
                   <span className="rec-number">02</span>
                   <div className="rec-detail">
                     <strong>Personal Invitation from PM Narendra Modi</strong>
-                    <p>Personally invited by Prime Minister Narendra Modi for National Creator Recognition at the PM's official gathering.</p>
                   </div>
                 </div>
 
@@ -63,7 +61,6 @@ export const AboutFounder = () => {
                   <span className="rec-number">03</span>
                   <div className="rec-detail">
                     <strong>Creator Nation Award</strong>
-                    <p>Recipient of the prestigious Creator Nation Award for visual excellence in digital content creation and creative mentoring.</p>
                   </div>
                 </div>
 
@@ -71,7 +68,6 @@ export const AboutFounder = () => {
                   <span className="rec-number">04</span>
                   <div className="rec-detail">
                     <strong>National Print & Digital Media Features</strong>
-                    <p>Repeatedly featured in leading national publications as one of Rajasthan's prominent digital creators and skill builders.</p>
                   </div>
                 </div>
               </div>

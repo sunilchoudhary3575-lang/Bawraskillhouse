@@ -63,6 +63,28 @@ export default function App() {
 
   const scrollTargetRef = useRef(null);
 
+  // Handle mobile/browser back button history tracking
+  useEffect(() => {
+    if (!window.history.state || !window.history.state.page) {
+      window.history.replaceState({ page: 'home' }, '', '');
+    } else {
+      setCurrentPage(window.history.state.page);
+    }
+
+    const handlePopState = (event) => {
+      if (event.state && event.state.page) {
+        setCurrentPage(event.state.page);
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Auto-scroll when page changes
   useEffect(() => {
     const target = scrollTargetRef.current;
@@ -161,6 +183,11 @@ export default function App() {
   // Switch page handler
   const navigateTo = (pageId, anchorId = null) => {
     scrollTargetRef.current = anchorId;
+    
+    if (pageId !== currentPage) {
+      window.history.pushState({ page: pageId }, '', '');
+    }
+    
     setCurrentPage(pageId);
     setIsMobileMenuOpen(false);
 

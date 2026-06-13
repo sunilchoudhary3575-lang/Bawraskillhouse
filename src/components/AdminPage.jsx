@@ -34,6 +34,19 @@ export const AdminPage = () => {
     alert(`Successfully updated: ${MEDIA_ITEMS.find(i => i.key === key).label}`);
   };
 
+  const handleFileUpload = async (key, file) => {
+    try {
+      const objectUrl = await updateMedia(key, file);
+      setEditValues(prev => ({
+        ...prev,
+        [key]: objectUrl
+      }));
+      alert(`Successfully uploaded file: ${file.name}`);
+    } catch (err) {
+      alert(`Upload failed: ${err.message}`);
+    }
+  };
+
   const handleResetAll = () => {
     if (window.confirm('Are you sure you want to revert all photos and videos to default settings?')) {
       resetMedia();
@@ -196,6 +209,27 @@ export const AdminPage = () => {
                         >
                           Update Link
                         </button>
+                      </div>
+
+                      {/* Local File Uploader / Device Gallery */}
+                      <div className="file-upload-row-bright">
+                        <label className="btn-file-upload-bright">
+                          {item.type === 'image' ? '🖼️ Choose Image File' : '🎥 Choose Video File'}
+                          <input
+                            type="file"
+                            accept={item.type === 'image' ? 'image/*' : 'video/*'}
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                handleFileUpload(item.key, file);
+                              }
+                            }}
+                          />
+                        </label>
+                        <span className="file-upload-desc-bright">
+                          Select directly from device gallery or files
+                        </span>
                       </div>
                       <div className="media-card-meta-bright">
                         <span>
