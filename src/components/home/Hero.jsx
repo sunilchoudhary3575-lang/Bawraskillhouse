@@ -52,7 +52,7 @@ export const Hero = ({ triggerModal }) => {
 
         <div className="hero-bottom-content">
           <div className="hero-actions">
-            <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
+            <button onClick={() => triggerModal('General Consultation')} className="btn btn-primary">Enroll Now</button>
             <button onClick={() => triggerModal('Brochure Request')} className="btn btn-outline">
               Watch Inside Classes <Icons.ArrowRight />
             </button>

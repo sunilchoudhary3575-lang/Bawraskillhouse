@@ -202,40 +202,7 @@ export const ConsultationModal = ({
               </div>
             )}
 
-            {!isInquiryMode && (
-              <>
-                {/* Separator / OR */}
-                <div style={{ textAlign: 'center', margin: '0.75rem 0', color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem', fontWeight: 800 }}>— OR —</div>
 
-                {/* Separate General Guidance Card */}
-                {(() => {
-                  const selectedCourse = consultationForm.course || modalCourse || 'General Consultation';
-                  const isGeneralActive = ['General Consultation', 'Free Demo Class', 'Campus Tour', 'Inquiry'].includes(selectedCourse) || 
-                                          !(
-                                            selectedCourse === 'Graphic Designing Course' || selectedCourse === 'Graphic Design Program' ||
-                                            selectedCourse === 'Video Editing Course' || selectedCourse === 'Video Editing Program' ||
-                                            selectedCourse === 'Social Media Marketing' || selectedCourse === 'Performance Marketing' ||
-                                            selectedCourse === 'Cinematography Course'
-                                          );
-
-                  return (
-                    <div 
-                      className={`general-consult-card ${isGeneralActive ? 'active' : ''}`}
-                      onClick={() => {
-                        window.location.href = "tel:+916377790409";
-                        setIsModalOpen(false);
-                      }}
-                    >
-                      <span className="general-card-icon">📞</span>
-                      <div className="general-card-text">
-                        <span className="general-card-title">Request Free Career Guidance Session</span>
-                        <span className="general-card-desc">Talk to Rawal Singh & our expert mentors for professional guidance.</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </>
-            )}
 
             <div className="form-group">
               <label htmlFor="modal-message">Description / Message</label>

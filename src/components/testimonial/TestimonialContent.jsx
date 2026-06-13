@@ -327,9 +327,9 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
             Aaj jo students screen par nazar aa rahe hain, kal tak woh bhi ek shuruaat kar rahe the. Bas pehla kadam uthao — baaki Bawra Skillhouse sambhaal lega.
           </p>
           <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="tel:+916377790409" className="btn btn-gold btn-large" style={{ textDecoration: 'none' }}>
+            <button onClick={() => triggerModal('General Consultation')} className="btn btn-gold btn-large">
               Enroll Today
-            </a>
+            </button>
             <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline-white btn-large">
               Inquiry
             </button>
