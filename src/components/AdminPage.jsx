@@ -11,6 +11,17 @@ export const AdminPage = () => {
   // Dashboard states
   const [activeTab, setActiveTab] = useState('Home Page');
   const [editValues, setEditValues] = useState({});
+  const [videoDurations, setVideoDurations] = useState({});
+
+  const handleLoadedMetadata = (key, event) => {
+    const duration = event.target.duration;
+    if (duration && !isNaN(duration)) {
+      const mins = Math.floor(duration / 60);
+      const secs = Math.floor(duration % 60);
+      const formatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      setVideoDurations(prev => ({ ...prev, [key]: formatted }));
+    }
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -182,13 +193,20 @@ export const AdminPage = () => {
                       ) : (
                         <div className="video-preview-wrapper">
                           <video 
+                            key={currentVal}
                             src={currentVal} 
                             muted
                             preload="metadata"
+                            onLoadedMetadata={(e) => handleLoadedMetadata(item.key, e)}
                           />
                           <div className="video-play-overlay">
                             <span>▶</span>
                           </div>
+                          {videoDurations[item.key] && (
+                            <span className="video-duration" style={{ fontSize: '0.65rem', padding: '0.1rem 0.3rem', bottom: '5px', right: '5px' }}>
+                              {videoDurations[item.key]}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>

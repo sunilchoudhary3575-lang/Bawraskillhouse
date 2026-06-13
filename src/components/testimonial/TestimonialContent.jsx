@@ -229,6 +229,7 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
                   >
                     <div className="video-thumbnail-wrapper">
                       <video 
+                        key={story.src}
                         ref={(el) => (videoRefs.current[index] = el)}
                         src={story.src} 
                         preload="metadata" 

@@ -50,6 +50,7 @@ export const ConsultationModal = ({
               ></iframe>
             ) : (
               <video
+                key={videoSrc}
                 src={videoSrc}
                 controls
                 autoPlay
