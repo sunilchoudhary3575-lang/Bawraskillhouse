@@ -23,14 +23,14 @@ export const Header = ({
           <a href="#" className={currentPage === 'portfolio' ? 'active-page' : ''} onClick={(e) => { e.preventDefault(); navigateTo('portfolio'); }}>Testimonial</a>
           <a href="#" className={currentPage === 'career' ? 'active-page' : ''} onClick={(e) => { e.preventDefault(); navigateTo('career'); }}>Career</a>
           <a href="#" className={currentPage === 'contact' ? 'active-page' : ''} onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>Contact Us</a>
-          <button className="btn-enroll-today nav-cta-mobile" onClick={() => { setIsMobileMenuOpen(false); triggerModal('General Consultation'); }}>
+          <a href="tel:+916377790409" className="btn-enroll-today nav-cta-mobile" onClick={() => setIsMobileMenuOpen(false)} style={{ textDecoration: 'none' }}>
             <span className="btn-enroll-text">Enroll Today</span>
             <span className="btn-enroll-icon-circle">
               <svg viewBox="0 0 24 24" fill="currentColor" className="btn-enroll-icon">
                 <path d="M4 3l12 12h-5.2l3.8 6.6-1.7 1-3.8-6.6L4 21V3z" />
               </svg>
             </span>
-          </button>
+          </a>
 
         </nav>
 

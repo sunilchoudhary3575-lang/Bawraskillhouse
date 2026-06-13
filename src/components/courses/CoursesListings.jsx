@@ -66,7 +66,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               </div>
 
               <div className="course-action-buttons mt-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => triggerModal('Graphic Designing Course')} className="btn btn-primary">Enroll Now</button>
+                <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
                 <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline">Inquiry</button>
               </div>
             </div>
@@ -115,7 +115,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               </div>
 
               <div className="course-action-buttons mt-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => triggerModal('Video Editing Course')} className="btn btn-primary">Enroll Now</button>
+                <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
                 <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline">Inquiry</button>
               </div>
             </div>
@@ -166,7 +166,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               </div>
 
               <div className="course-action-buttons mt-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => triggerModal('Social Media Marketing')} className="btn btn-primary">Enroll Now</button>
+                <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
                 <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline">Inquiry</button>
               </div>
             </div>
@@ -216,7 +216,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               </div>
 
               <div className="course-action-buttons mt-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => triggerModal('Performance Marketing')} className="btn btn-primary">Enroll Now</button>
+                <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
                 <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline">Inquiry</button>
               </div>
             </div>
@@ -268,7 +268,7 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               </div>
 
               <div className="course-action-buttons mt-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => triggerModal('Cinematography Course')} className="btn btn-primary">Enroll Now</button>
+                <a href="tel:+916377790409" className="btn btn-primary" style={{ textDecoration: 'none' }}>Enroll Now</a>
                 <button onClick={() => triggerModal('Inquiry')} className="btn btn-outline">Inquiry</button>
               </div>
             </div>

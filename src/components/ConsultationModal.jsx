@@ -221,8 +221,8 @@ export const ConsultationModal = ({
                     <div 
                       className={`general-consult-card ${isGeneralActive ? 'active' : ''}`}
                       onClick={() => {
-                        setConsultationForm({ ...consultationForm, course: 'General Consultation' });
-                        setShowCourseSelection(false);
+                        window.location.href = "tel:+916377790409";
+                        setIsModalOpen(false);
                       }}
                     >
                       <span className="general-card-icon">📞</span>

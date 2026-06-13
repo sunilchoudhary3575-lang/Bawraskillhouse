@@ -2734,6 +2734,10 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .who-can-join-grid .join-card:last-child {
+    grid-column: span 2;
+  }
+
   .detailed-syllabus-split {
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
@@ -2919,6 +2923,10 @@
   .who-can-join-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1rem !important;
+  }
+
+  .who-can-join-grid .join-card:last-child {
+    grid-column: span 2 !important;
   }
 
   .join-card {
@@ -6277,6 +6285,10 @@ body {
     gap: 0.65rem !important;
   }
 
+  .who-can-join-grid .join-card:last-child {
+    grid-column: span 2 !important;
+  }
+
   .join-card {
     padding: 1rem 0.65rem !important;
     border-radius: 16px !important;
@@ -6295,6 +6307,13 @@ body {
   .join-icon {
     font-size: 1.5rem !important;
     margin-bottom: 0.4rem !important;
+  }
+
+  .join-card-bg-shape {
+    width: 80px !important;
+    height: 80px !important;
+    bottom: -5px !important;
+    right: -5px !important;
   }
 
   /* Why Choose Us Grid & Cards */
