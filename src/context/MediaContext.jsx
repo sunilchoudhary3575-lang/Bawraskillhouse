@@ -1,0 +1,386 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+// Static default asset imports
+import heroWorkspaceDefault from '../assets/hero_workspace.png';
+import welcome1Default from '../assets/welcome_1.jpg';
+import welcome2Default from '../assets/welcome_2.png';
+import welcome3Default from '../assets/welcome_3.jpg';
+import welcome4Default from '../assets/welcome_4.png';
+import welcome5Default from '../assets/welcome_5.png';
+import cinemaCameraImgDefault from '../assets/cinematography_camera.png';
+import droneImgDefault from '../assets/cinematography_drone.png';
+import studioWorkstationsDefault from '../assets/studio_workstations.png';
+import founderRawalSinghDefault from '../assets/founder_rawal_singh.jpg';
+
+// Create context
+const MediaContext = createContext();
+
+export const useMedia = () => {
+  const context = useContext(MediaContext);
+  if (!context) {
+    throw new Error('useMedia must be used within a MediaProvider');
+  }
+  return context;
+};
+
+// Config metadata for the admin panel to easily enumerate items
+export const MEDIA_ITEMS = [
+  // SECTION: HOME PAGE
+  {
+    key: 'heroWorkspace',
+    label: 'Hero Workspace (Main Image)',
+    section: 'Home Page',
+    type: 'image',
+    default: heroWorkspaceDefault,
+  },
+  {
+    key: 'welcome1',
+    label: 'Classroom Slideshow Image 1',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome1Default,
+  },
+  {
+    key: 'welcome2',
+    label: 'Classroom Slideshow Image 2',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome2Default,
+  },
+  {
+    key: 'welcome3',
+    label: 'Classroom Slideshow Image 3',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome3Default,
+  },
+  {
+    key: 'welcome4',
+    label: 'Classroom Slideshow Image 4',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome4Default,
+  },
+  {
+    key: 'welcome5',
+    label: 'Classroom Slideshow Image 5',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome5Default,
+  },
+  {
+    key: 'cinemaCameraImg',
+    label: 'Cinematography Camera Thumbnail',
+    section: 'Home Page',
+    type: 'image',
+    default: cinemaCameraImgDefault,
+  },
+  {
+    key: 'droneImg',
+    label: 'Cinematography Drone Thumbnail',
+    section: 'Home Page',
+    type: 'image',
+    default: droneImgDefault,
+  },
+
+  // SECTION: ABOUT PAGE
+  {
+    key: 'studioWorkstations',
+    label: 'About Story (Studio Campus environment)',
+    section: 'About Page',
+    type: 'image',
+    default: studioWorkstationsDefault,
+  },
+  {
+    key: 'founderRawalSingh',
+    label: 'Founder Rawal Singh Portrait',
+    section: 'About Page',
+    type: 'image',
+    default: founderRawalSinghDefault,
+  },
+
+  // SECTION: COURSE LISTINGS
+  {
+    key: 'course_graphic',
+    label: 'Graphic Designing Course Workstation',
+    section: 'Course Details',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'course_video',
+    label: 'Video Editing Course Workspace',
+    section: 'Course Details',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'course_social',
+    label: 'Social Media Strategy Workspace',
+    section: 'Course Details',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'course_performance',
+    label: 'Performance Advertising Analytics',
+    section: 'Course Details',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'course_cinematography',
+    label: 'Cinematography DSLR Shooting',
+    section: 'Course Details',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=600&q=80',
+  },
+
+  // SECTION: TESTIMONIAL VIDEOS
+  {
+    key: 'video_arjun',
+    label: 'Video Story: Arjun Sharma (Testimonial 1)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/01 low quality.mp4',
+  },
+  {
+    key: 'video_priya',
+    label: 'Video Story: Priya Rathore (Testimonial 2)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/02 Low Quality.mp4',
+  },
+  {
+    key: 'video_vikram',
+    label: 'Video Story: Vikram Panwar (Testimonial 3)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/03 Low Quality.mp4',
+  },
+  {
+    key: 'video_mohit',
+    label: 'Video Story: Mohit Gehlot (Testimonial 4)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/04 Low Quality.mp4',
+  },
+  {
+    key: 'video_karan',
+    label: 'Video Story: Karan Bhati (Testimonial 5)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/05 Low Quality.mp4',
+  },
+  {
+    key: 'video_anjali',
+    label: 'Video Story: Anjali Sharma (Testimonial 6)',
+    section: 'Student Testimonials',
+    type: 'video',
+    default: '/01 low quality.mp4',
+  },
+
+  // SECTION: PORTFOLIO/WORK TESTIMONIAL GALLERY
+  {
+    key: 'portfolio_1',
+    label: 'Premium Craft Gin Identity (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'portfolio_2',
+    label: 'Nike Phantom Cinematic Campaign (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'portfolio_3',
+    label: 'Liquid Fluid Motion Graphics Loop (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'portfolio_4',
+    label: 'Zephyr Organics Cosmetics Box (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'portfolio_5',
+    label: 'Minimalist Sneaker Social Assets (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    key: 'portfolio_6',
+    label: 'SaaS App Animated Interface Mockup (Portfolio)',
+    section: 'Portfolio Gallery',
+    type: 'image',
+    default: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+  },
+];
+
+const dbName = 'BawraMediaDB';
+const storeName = 'media';
+
+const getDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const saveToDB = async (key, val) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.put(val, key);
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const getFromDB = async (key) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.get(key);
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
+const deleteFromDB = async (key) => {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+  });
+};
+
+export const MediaProvider = ({ children }) => {
+  const [media, setMedia] = useState(() => {
+    // Generate initial state combining defaults & localStorage overrides
+    const initialMedia = {};
+    MEDIA_ITEMS.forEach(item => {
+      let stored = localStorage.getItem(`bawra_media_${item.key}`);
+      // Bust old pen/book course_graphic image to load the new premium technical design monitor image
+      if (item.key === 'course_graphic' && stored && (stored.includes('photo-1581291518633-83b4ebd1d83e') || stored.includes('photo-1561070791-26c113006238'))) {
+        localStorage.removeItem('bawra_media_course_graphic');
+        stored = null;
+      }
+      // Bust cached founder image to immediately load the new default image
+      if (item.key === 'founderRawalSingh' && stored) {
+        localStorage.removeItem('bawra_media_founderRawalSingh');
+        stored = null;
+      }
+      initialMedia[item.key] = stored || item.default;
+    });
+    return initialMedia;
+  });
+
+  useEffect(() => {
+    const loadIndexedDBMedia = async () => {
+      const updatedMedia = { ...media };
+      let changed = false;
+      for (const item of MEDIA_ITEMS) {
+        const stored = localStorage.getItem(`bawra_media_${item.key}`);
+        if (stored === 'indexeddb_blob') {
+          try {
+            const blob = await getFromDB(item.key);
+            if (blob) {
+              updatedMedia[item.key] = URL.createObjectURL(blob);
+              changed = true;
+            }
+          } catch (err) {
+            console.error("Failed to read blob from IndexedDB for:", item.key, err);
+          }
+        }
+      }
+      if (changed) {
+        setMedia(updatedMedia);
+      }
+    };
+    loadIndexedDBMedia();
+  }, []);
+
+  const updateMedia = async (key, value) => {
+    if (value instanceof File || value instanceof Blob) {
+      try {
+        await saveToDB(key, value);
+        const objectUrl = URL.createObjectURL(value);
+        localStorage.setItem(`bawra_media_${key}`, 'indexeddb_blob');
+        setMedia(prev => ({
+          ...prev,
+          [key]: objectUrl,
+        }));
+        return objectUrl;
+      } catch (err) {
+        console.error("Failed to save media to IndexedDB:", err);
+        throw err;
+      }
+    } else if (typeof value === 'string' && value.trim() !== '') {
+      localStorage.setItem(`bawra_media_${key}`, value.trim());
+      try {
+        await deleteFromDB(key);
+      } catch (err) {}
+      setMedia(prev => ({
+        ...prev,
+        [key]: value.trim(),
+      }));
+      return value.trim();
+    } else {
+      localStorage.removeItem(`bawra_media_${key}`);
+      try {
+        await deleteFromDB(key);
+      } catch (err) {}
+      const item = MEDIA_ITEMS.find(i => i.key === key);
+      const defaultVal = item ? item.default : '';
+      setMedia(prev => ({
+        ...prev,
+        [key]: defaultVal,
+      }));
+      return defaultVal;
+    }
+  };
+
+  const resetMedia = async () => {
+    MEDIA_ITEMS.forEach(item => {
+      localStorage.removeItem(`bawra_media_${item.key}`);
+    });
+    try {
+      const db = await getDB();
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).clear();
+    } catch (err) {}
+
+    const resetState = {};
+    MEDIA_ITEMS.forEach(item => {
+      resetState[item.key] = item.default;
+    });
+    setMedia(resetState);
+  };
+
+  return (
+    <MediaContext.Provider value={{ media, updateMedia, resetMedia }}>
+      {children}
+    </MediaContext.Provider>
+  );
+};
