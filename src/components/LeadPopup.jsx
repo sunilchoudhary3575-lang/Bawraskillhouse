@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export const LeadPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -29,7 +31,7 @@ export const LeadPopup = () => {
     setIsDismissed(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) {
       alert('Please fill out your Name and Phone Number.');
@@ -37,15 +39,26 @@ export const LeadPopup = () => {
     }
 
     setFormSubmitted(true);
-    
-    // Simulate submission
-    setTimeout(() => {
+    try {
+      await addDoc(collection(db, 'enrollments'), {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || '',
+        description: formData.description || '',
+        course: 'General Consultation',
+        submittedAt: new Date().toISOString(),
+        source: 'lead_popup'
+      });
       setIsVisible(false);
       setIsDismissed(true);
       alert(`Thank you, ${formData.name}! Your enrollment request has been received. Our counselor will contact you in 2 hours.`);
       setFormData({ name: '', phone: '', email: '', description: '' });
       setFormSubmitted(false);
-    }, 1200);
+    } catch (err) {
+      console.error('Failed to save popup lead to Firestore:', err);
+      setFormSubmitted(false);
+      alert(`Submission failed: ${err.message}. Please try again.`);
+    }
   };
 
   if (!isVisible || isDismissed) return null;

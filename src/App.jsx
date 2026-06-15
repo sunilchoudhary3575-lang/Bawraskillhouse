@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useMedia } from './context/MediaContext';
+import { db } from './firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 // Layout & Common Components
 import Header from './components/Header';
@@ -165,19 +167,36 @@ export default function App() {
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!consultationForm.name || !consultationForm.phone) {
       alert('Please fill out your Name and Phone Number.');
       return;
     }
     setFormSubmitted(true);
-    setTimeout(() => {
+
+    const isEnquiry = currentPage === 'contact' || consultationForm.course === 'Enquiry' || modalCourse === 'Brochure Request';
+    const targetCollection = isEnquiry ? 'enquiries' : 'enrollments';
+
+    try {
+      await addDoc(collection(db, targetCollection), {
+        name: consultationForm.name,
+        phone: consultationForm.phone,
+        email: consultationForm.email || '',
+        course: consultationForm.course || 'General Consultation',
+        message: consultationForm.message || '',
+        submittedAt: new Date().toISOString(),
+        source: currentPage === 'contact' ? 'contact_page' : 'consultation_modal'
+      });
       setFormSubmitted(false);
       setIsModalOpen(false);
       setConsultationForm({ name: '', phone: '', email: '', course: 'General Consultation', message: '' });
       alert('Your request has been received. Our counselor will reach out to you within 2 hours!');
-    }, 1500);
+    } catch (err) {
+      console.error(`Failed to save to Firestore ${targetCollection}:`, err);
+      setFormSubmitted(false);
+      alert(`Submission failed: ${err.message}. Please try again.`);
+    }
   };
 
   // Switch page handler

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useMedia, MEDIA_ITEMS } from '../context/MediaContext';
+import { db, storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 export const AdminPage = () => {
   const { media, updateMedia, resetMedia } = useMedia();
@@ -12,6 +15,18 @@ export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('Home Page');
   const [editValues, setEditValues] = useState({});
   const [videoDurations, setVideoDurations] = useState({});
+  
+  // Firestore document ID mapping state
+  const [dbDocs, setDbDocs] = useState(() => {
+    const initial = {};
+    MEDIA_ITEMS.forEach(item => {
+      const stored = localStorage.getItem(`firestore_doc_${item.key}`);
+      if (stored) {
+        initial[item.key] = stored;
+      }
+    });
+    return initial;
+  });
 
   const handleLoadedMetadata = (key, event) => {
     const duration = event.target.duration;
@@ -39,22 +54,105 @@ export const AdminPage = () => {
     }
   };
 
-  const handleUpdate = (key) => {
+  const handleUpdateData = async (key, updatedUrl) => {
+    const docId = dbDocs[key];
+    const item = MEDIA_ITEMS.find(i => i.key === key);
+    const title = item ? item.label : key;
+    const type = item ? item.type : 'image';
+
+    try {
+      if (docId) {
+        const docRef = doc(db, 'mediaFiles', docId);
+        await updateDoc(docRef, {
+          title: title,
+          url: updatedUrl,
+          type: type,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        const docRef = await addDoc(collection(db, 'mediaFiles'), {
+          key: key,
+          title: title,
+          type: type,
+          url: updatedUrl,
+          uploadedAt: new Date().toISOString()
+        });
+        setDbDocs(prev => {
+          localStorage.setItem(`firestore_doc_${key}`, docRef.id);
+          return { ...prev, [key]: docRef.id };
+        });
+      }
+    } catch (err) {
+      console.error('Firestore update failed:', err);
+    }
+  };
+
+  const handleUpdate = async (key) => {
     const newVal = editValues[key];
-    updateMedia(key, newVal);
-    alert(`Successfully updated: ${MEDIA_ITEMS.find(i => i.key === key).label}`);
+    try {
+      await updateMedia(key, newVal);
+      await handleUpdateData(key, newVal);
+      alert(`Successfully updated and saved to Firestore: ${MEDIA_ITEMS.find(i => i.key === key).label}`);
+    } catch (err) {
+      alert(`Update failed: ${err.message}`);
+    }
   };
 
   const handleFileUpload = async (key, file) => {
     try {
-      const objectUrl = await updateMedia(key, file);
+      console.log('Starting upload to Firebase Storage:', file.name);
+      const storageRef = ref(storage, `media/${key}_${Date.now()}_${file.name}`);
+      
+      let uploadResult;
+      try {
+        uploadResult = await uploadBytes(storageRef, file);
+      } catch (storageErr) {
+        console.error('Firebase Storage upload failed:', storageErr);
+        throw new Error(`Storage Upload failed: ${storageErr.message}. (Make sure Firebase Storage is enabled in Console and rules allow write access)`);
+      }
+
+      console.log('Retrieving download URL from Storage...');
+      let downloadURL;
+      try {
+        downloadURL = await getDownloadURL(uploadResult.ref);
+      } catch (urlErr) {
+        console.error('Failed to get download URL:', urlErr);
+        throw new Error(`Failed to get download URL: ${urlErr.message}`);
+      }
+      
+      const item = MEDIA_ITEMS.find(i => i.key === key);
+      const title = item ? item.label : key;
+      const type = item ? item.type : (file.type.startsWith('image/') ? 'image' : 'video');
+
+      console.log('Saving metadata to Firestore collections...');
+      let docRef;
+      try {
+        docRef = await addDoc(collection(db, 'mediaFiles'), {
+          key: key,
+          title: title,
+          type: type,
+          url: downloadURL,
+          uploadedAt: new Date().toISOString()
+        });
+      } catch (firestoreErr) {
+        console.error('Firestore document save failed:', firestoreErr);
+        throw new Error(`Firestore save failed: ${firestoreErr.message}. (Make sure Firestore Database is enabled and rules allow write access)`);
+      }
+
+      setDbDocs(prev => {
+        localStorage.setItem(`firestore_doc_${key}`, docRef.id);
+        return { ...prev, [key]: docRef.id };
+      });
+
+      await updateMedia(key, downloadURL);
       setEditValues(prev => ({
         ...prev,
-        [key]: objectUrl
+        [key]: downloadURL
       }));
-      alert(`Successfully uploaded file: ${file.name}`);
+      alert(`Successfully uploaded file and saved to Firestore: ${file.name}`);
     } catch (err) {
-      alert(`Upload failed: ${err.message}`);
+      console.error('Upload process failed:', err);
+      alert(err.message);
     }
   };
 
@@ -83,7 +181,7 @@ export const AdminPage = () => {
     setPassword('');
   };
 
-  const sections = ['Home Page', 'About Page', 'Course Details', 'Student Testimonials', 'Portfolio Gallery'];
+  const sections = ['Home Page', 'About Page', 'Course Details', 'Student Testimonials'];
   const filteredItems = MEDIA_ITEMS.filter(item => item.section === activeTab);
 
   return (
