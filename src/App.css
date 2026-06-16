@@ -5171,13 +5171,13 @@
   position: relative;
   display: block;
   max-width: 580px;
-  border: 1px solid var(--border-gold);
-  background: #f1f1f5;
+  border: none;
+  background: transparent;
   border-radius: 8px;
   margin-top: -1.5rem;
   margin-bottom: 2rem;
   padding: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: none;
   mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
 }
