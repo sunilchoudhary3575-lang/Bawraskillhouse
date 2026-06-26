@@ -26,7 +26,7 @@ export const WhoCanJoin = () => {
       </svg>
 
       <div className="container">
-        <div className="section-header text-center">
+        <div className="section-header text-center reveal-on-scroll">
           <span className="section-subtitle">ELIGIBILITY</span>
           <h2 className="section-title">Who Can Join?</h2>
           <p className="section-desc">Our training program is designed to support diverse career paths.</p>
@@ -34,7 +34,7 @@ export const WhoCanJoin = () => {
 
         <div className="who-can-join-grid">
           {/* Students */}
-          <div className="join-card glass student-card">
+          <div className="join-card glass student-card reveal-on-scroll">
             <svg className="join-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M60 25 L105 45 L60 65 L15 45 Z" fill="url(#bawraNavyPink)" fillOpacity="0.05" stroke="url(#bawraNavyPink)" strokeWidth="1.2" strokeOpacity="0.2" />
               <path d="M30 51.5 L30 75 C30 90, 90 90, 90 75 L90 51.5" stroke="url(#bawraNavyPink)" strokeWidth="1.2" strokeOpacity="0.2" />
@@ -47,7 +47,7 @@ export const WhoCanJoin = () => {
           </div>
 
           {/* Freelancers */}
-          <div className="join-card glass freelancer-card">
+          <div className="join-card glass freelancer-card reveal-on-scroll">
             <svg className="join-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <rect x="20" y="30" width="80" height="50" rx="4" stroke="url(#bawraPurplePink)" strokeWidth="1.2" strokeOpacity="0.2" fill="url(#bawraPurplePink)" fillOpacity="0.03" />
               <path d="M15 80 L105 80 L110 88 L10 88 Z" fill="url(#bawraPurplePink)" fillOpacity="0.08" stroke="url(#bawraPurplePink)" strokeWidth="1.2" strokeOpacity="0.2" />
@@ -60,7 +60,7 @@ export const WhoCanJoin = () => {
           </div>
 
           {/* Business Owners */}
-          <div className="join-card glass business-card">
+          <div className="join-card glass business-card reveal-on-scroll">
             <svg className="join-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M20 95 L20 70 M45 95 L45 50 M70 95 L70 35 M95 95 L95 15" stroke="url(#bawraNavyGold)" strokeWidth="4" strokeLinecap="round" strokeOpacity="0.12" />
               <path d="M20 70 L45 50 L70 35 L95 15" stroke="url(#bawraNavyGold)" strokeWidth="1.5" strokeOpacity="0.25" strokeLinecap="round" />
@@ -72,7 +72,7 @@ export const WhoCanJoin = () => {
           </div>
 
           {/* Content Creators */}
-          <div className="join-card glass creator-card">
+          <div className="join-card glass creator-card reveal-on-scroll">
             <svg className="join-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <polygon points="45,35 90,60 45,85" fill="url(#bawraPinkGold)" fillOpacity="0.06" stroke="url(#bawraPinkGold)" strokeWidth="1.5" strokeOpacity="0.25" strokeLinejoin="round" />
               <rect x="15" y="15" width="20" height="20" rx="3" stroke="url(#bawraPinkGold)" strokeWidth="1" strokeOpacity="0.15" strokeDasharray="3,3" />
@@ -84,7 +84,7 @@ export const WhoCanJoin = () => {
           </div>
 
           {/* Unemployed Youth */}
-          <div className="join-card glass youth-card">
+          <div className="join-card glass youth-card reveal-on-scroll">
             <svg className="join-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M85 30 L45 70 M85 30 L65 35 M85 30 L80 50" stroke="url(#bawraNavyPink)" strokeWidth="1.5" strokeOpacity="0.25" strokeLinecap="round" />
               <path d="M30 90 C35 75, 45 60, 85 30" stroke="url(#bawraNavyPink)" strokeWidth="1.5" strokeOpacity="0.2" strokeDasharray="3,3" />

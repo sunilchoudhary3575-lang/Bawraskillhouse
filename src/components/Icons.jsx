@@ -159,6 +159,60 @@ export const Icons = {
       <path d="M23.4641 16.9287L15.4632 3.072C14.3586 1.1587 11.9121.5028 9.9988 1.6074S7.4295 5.1585 8.5341 7.0718l8.0009 13.8567c1.1046 1.9133 3.5511 2.5679 5.4644 1.4646 1.9134-1.1046 2.568-3.5511 1.4647-5.4644z" fill="#4285F4" />
       <path d="M7.5137 4.8438L1.5645 15.1484A4.5 4.5 0 0 1 4 14.4297c2.5597-.0075 4.6248 2.1585 4.4941 4.7148l3.2168-5.5723-3.6094-6.25c-.4499-.7793-.6322-1.6394-.5878-2.4784z" fill="#FBBC05" />
     </svg>
+  ),
+  LinkedIn: () => (
+    <svg className="software-icon li" viewBox="0 0 24 24" fill="currentColor">
+      <rect width="24" height="24" rx="4" fill="#0077B5" />
+      <path d="M19 19h-3v-4.5c0-1.1-.9-2-2-2s-2 .9-2 2V19h-3V9h3v1.5c.5-.8 1.5-1.5 2.5-1.5 2 0 3.5 1.5 3.5 4.5V19zM5 19H8V9H5V19zM6.5 7.5c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8 1.8.8 1.8 1.8-.8 1.8-1.8 1.8z" fill="#FFFFFF" />
+    </svg>
+  ),
+  Camera: () => (
+    <svg className="software-icon cm" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="4" fill="#0E121A" />
+      <path d="M4 9h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z" fill="#2E3440" />
+      <rect x="6" y="6" width="3" height="3" rx="1" fill="#4C566A" />
+      <rect x="15" y="7" width="4" height="2" rx="0.5" fill="#4C566A" />
+      <path d="M10 9h4l-1-2h-2z" fill="#4C566A" />
+      <circle cx="7" cy="12" r="1" fill="#FF5E5B" />
+      <circle cx="13.5" cy="15" r="5" fill="#1C212B" stroke="#4C566A" strokeWidth="0.8" />
+      <circle cx="13.5" cy="15" r="3.8" fill="#11151C" />
+      <circle cx="13.5" cy="15" r="2.8" fill="none" stroke="#88C0D0" strokeWidth="0.6" strokeDasharray="3 6" />
+      <circle cx="13" cy="14.5" r="1.5" fill="#88C0D0" opacity="0.6" />
+      <circle cx="14" cy="15.5" r="0.8" fill="#FFFFFF" opacity="0.8" />
+    </svg>
+  ),
+  Drone: () => (
+    <svg className="software-icon drn" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="4" fill="#0E121A" />
+      <line x1="6" y1="6" x2="18" y2="18" stroke="#D8DEE9" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="6" y1="18" x2="18" y2="6" stroke="#D8DEE9" strokeWidth="1.8" strokeLinecap="round" />
+      <rect x="9.5" y="9.5" width="5" height="5" rx="1.5" fill="#ECEFF4" stroke="#4C566A" strokeWidth="0.8" />
+      <circle cx="12" cy="12" r="1.2" fill="#88C0D0" />
+      <circle cx="6" cy="6" r="1.5" fill="#3B4252" />
+      <circle cx="18" cy="6" r="1.5" fill="#3B4252" />
+      <circle cx="6" cy="18" r="1.5" fill="#3B4252" />
+      <circle cx="18" cy="18" r="1.5" fill="#3B4252" />
+      <ellipse cx="6" cy="6" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(30 6 6)" />
+      <ellipse cx="18" cy="6" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(-30 18 6)" />
+      <ellipse cx="6" cy="18" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(-30 6 18)" />
+      <ellipse cx="18" cy="18" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(30 18 18)" />
+      <circle cx="10" cy="10" r="0.6" fill="#A3BE8C" />
+      <circle cx="14" cy="10" r="0.6" fill="#BF616A" />
+    </svg>
+  ),
+  Mic: () => (
+    <svg className="software-icon mc" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="4" fill="#0E121A" />
+      <rect x="7" y="7" width="10" height="12" rx="2" fill="#2E3440" stroke="#4C566A" strokeWidth="0.8" />
+      <rect x="9" y="10" width="6" height="3" rx="0.5" fill="#1A1F29" />
+      <rect x="10" y="11.2" width="4" height="0.6" fill="#A3BE8C" />
+      <path d="M10 5h4l1 2H9z" fill="#D8DEE9" />
+      <line x1="11" y1="5" x2="11" y2="7" stroke="#3B4252" strokeWidth="0.5" />
+      <line x1="12" y1="5" x2="12" y2="7" stroke="#3B4252" strokeWidth="0.5" />
+      <line x1="13" y1="5" x2="13" y2="7" stroke="#3B4252" strokeWidth="0.5" />
+      <line x1="9.5" y1="6" x2="14.5" y2="6" stroke="#3B4252" strokeWidth="0.5" />
+      <line x1="8" y1="9" x2="8" y2="17" stroke="#E5E9F0" strokeWidth="1" strokeLinecap="round" />
+    </svg>
   )
 };
 

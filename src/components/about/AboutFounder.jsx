@@ -20,7 +20,7 @@ export const AboutFounder = () => {
             </div>
 
             <div className="founder-info-col">
-              <span className="section-subtitle text-pink">MEET OUR FOUNDER</span>
+              <span className="section-subtitle">MEET OUR FOUNDER</span>
               {/* Mobile-only founder image */}
               <div className="founder-img-container founder-img-mobile">
                 <img src={media.founderRawalSingh} alt="Rawal Singh - Founder of Bawra Skill House" className="founder-img" />

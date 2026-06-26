@@ -3,14 +3,17 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 // Static default asset imports
 import heroWorkspaceDefault from '../assets/hero_workspace.png';
 import welcome1Default from '../assets/welcome_1.jpg';
-import welcome2Default from '../assets/welcome_2.png';
+import welcome2Default from '../assets/welcome_2.jpg';
 import welcome3Default from '../assets/welcome_3.jpg';
 import welcome4Default from '../assets/welcome_4.png';
-import welcome5Default from '../assets/welcome_5.png';
+import welcome5Default from '../assets/welcome_5.jpg';
+import welcome6Default from '../assets/welcome_6.jpg';
 import cinemaCameraImgDefault from '../assets/cinematography_camera.png';
 import droneImgDefault from '../assets/cinematography_drone.png';
 import studioWorkstationsDefault from '../assets/studio_workstations.png';
 import founderRawalSinghDefault from '../assets/founder_rawal_singh.jpg';
+import aboutStory1Default from '../assets/about_story_1.jpg';
+import aboutStory2Default from '../assets/about_story_2.jpg';
 
 // Create context
 const MediaContext = createContext();
@@ -69,6 +72,13 @@ export const MEDIA_ITEMS = [
     default: welcome5Default,
   },
   {
+    key: 'welcome6',
+    label: 'Classroom Slideshow Image 6',
+    section: 'Home Page',
+    type: 'image',
+    default: welcome6Default,
+  },
+  {
     key: 'cinemaCameraImg',
     label: 'Cinematography Camera Thumbnail',
     section: 'Home Page',
@@ -90,6 +100,20 @@ export const MEDIA_ITEMS = [
     section: 'About Page',
     type: 'image',
     default: studioWorkstationsDefault,
+  },
+  {
+    key: 'aboutStory1',
+    label: 'About Story Image 1',
+    section: 'About Page',
+    type: 'image',
+    default: aboutStory1Default,
+  },
+  {
+    key: 'aboutStory2',
+    label: 'About Story Image 2',
+    section: 'About Page',
+    type: 'image',
+    default: aboutStory2Default,
   },
   {
     key: 'founderRawalSingh',
@@ -289,6 +313,16 @@ export const MediaProvider = ({ children }) => {
       // Bust cached founder image to immediately load the new default image
       if (item.key === 'founderRawalSingh' && stored) {
         localStorage.removeItem('bawra_media_founderRawalSingh');
+        stored = null;
+      }
+      // Bust cached welcome slideshow images to immediately load the new default images
+      if ((item.key === 'welcome1' || item.key === 'welcome2' || item.key === 'welcome3' || item.key === 'welcome5' || item.key === 'welcome6') && stored) {
+        localStorage.removeItem(`bawra_media_${item.key}`);
+        stored = null;
+      }
+      // Bust cached about story slideshow images to immediately load the new default images
+      if ((item.key === 'aboutStory1' || item.key === 'aboutStory2') && stored) {
+        localStorage.removeItem(`bawra_media_${item.key}`);
         stored = null;
       }
       initialMedia[item.key] = stored || item.default;

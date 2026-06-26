@@ -3,7 +3,7 @@ import { useMedia } from '../../context/MediaContext';
 
 export const Welcome = ({ navigateTo }) => {
   const { media } = useMedia();
-  const slideshowImages = [media.welcome1, media.welcome2, media.welcome3, media.welcome4, media.welcome5];
+  const slideshowImages = [media.welcome1, media.welcome2, media.welcome3, media.welcome4, media.welcome5, media.welcome6];
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
@@ -12,7 +12,7 @@ export const Welcome = ({ navigateTo }) => {
     if (isHovered) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
-    }, 2500);
+    }, 1500);
     return () => clearInterval(interval);
   }, [isHovered]);
 

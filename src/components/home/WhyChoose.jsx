@@ -29,14 +29,14 @@ export const WhyChoose = () => {
       </svg>
 
       <div className="container">
-        <div className="section-header text-center">
+        <div className="section-header text-center reveal-on-scroll">
           <span className="section-subtitle">THE BAWRA EDGE</span>
           <h2 className="section-title">Why Choose Us?</h2>
         </div>
 
         <div className="why-grid-home">
           {/* Real Project Work */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url(${media.heroWorkspace})` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <rect x="20" y="30" width="80" height="60" rx="6" stroke="url(#bawraNavyPink2)" strokeWidth="1.2" strokeOpacity="0.25" fill="url(#bawraNavyPink2)" fillOpacity="0.03" />
@@ -53,7 +53,7 @@ export const WhyChoose = () => {
           </div>
 
           {/* Internship Opportunity */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url(${media.studioWorkstations})` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M25 60 C25 40, 95 40, 95 60 C95 80, 25 80, 25 60 Z" stroke="url(#bawraPurplePink2)" strokeWidth="1.2" strokeOpacity="0.2" fill="url(#bawraPurplePink2)" fillOpacity="0.03" />
@@ -67,7 +67,7 @@ export const WhyChoose = () => {
           </div>
 
           {/* Portfolio Development */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=400&q=60')` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M20 35 C20 30, 25 30, 30 30 H 45 L 55 40 H 95 C100 40, 100 45, 100 50 V 85 C100 90, 95 90, 95 85 H 30 C25 85, 20 85, 20 80 Z" stroke="url(#bawraNavyGold2)" strokeWidth="1.2" strokeOpacity="0.25" fill="url(#bawraNavyGold2)" fillOpacity="0.03" />
@@ -79,7 +79,7 @@ export const WhyChoose = () => {
           </div>
 
           {/* Freelancing Guidance */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=60')` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <circle cx="60" cy="60" r="35" stroke="url(#bawraPinkGold2)" strokeWidth="1.2" strokeOpacity="0.25" fill="url(#bawraPinkGold2)" fillOpacity="0.03" />
@@ -94,7 +94,7 @@ export const WhyChoose = () => {
           </div>
 
           {/* Job Assistance Support */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=60')` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <path d="M60 20 L80 65 L60 55 L40 65 Z" stroke="url(#bawraPurplePink2)" strokeWidth="1.2" strokeOpacity="0.25" fill="url(#bawraPurplePink2)" fillOpacity="0.03" />
@@ -108,7 +108,7 @@ export const WhyChoose = () => {
           </div>
 
           {/* Certificate of Completion */}
-          <div className="why-card glass">
+          <div className="why-card glass reveal-on-scroll">
             <div className="why-card-bg-image" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=400&q=60')` }}></div>
             <svg className="why-card-bg-shape" viewBox="0 0 120 120" fill="none">
               <polygon points="60,20 100,40 60,60 20,40" stroke="url(#bawraNavyPink2)" strokeWidth="1.2" strokeOpacity="0.25" fill="url(#bawraNavyPink2)" fillOpacity="0.03" />

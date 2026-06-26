@@ -3,6 +3,7 @@ import './App.css';
 import { useMedia } from './context/MediaContext';
 import { db } from './firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import logoImg from './assets/logo.png';
 
 // Layout & Common Components
 import Header from './components/Header';
@@ -51,6 +52,8 @@ export default function App() {
   const { media } = useMedia();
   // Page Routing State: 'home', 'about', 'courses', 'portfolio', 'career', 'contact'
   const [currentPage, setCurrentPage] = useState('home');
+  const [showPreloader, setShowPreloader] = useState(true);
+  const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalCourse, setModalCourse] = useState('General Consultation');
@@ -58,6 +61,31 @@ export default function App() {
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [showHeader, setShowHeader] = useState(true);
   const lastScrollY = useRef(0);
+
+  // Preloader timeout effect
+  useEffect(() => {
+    // Lock scroll on mount
+    document.body.style.overflow = 'hidden';
+
+    // Start fading out after 1800ms
+    const fadeTimeout = setTimeout(() => {
+      setIsPreloaderFading(true);
+      // Unlock scroll as it starts fading out
+      document.body.style.overflow = '';
+    }, 1800);
+
+    // Completely unmount/remove the preloader after 2300ms (allowing 500ms fade transition)
+    const unmountTimeout = setTimeout(() => {
+      setShowPreloader(false);
+    }, 2300);
+
+    return () => {
+      clearTimeout(fadeTimeout);
+      clearTimeout(unmountTimeout);
+      // Reset body style just in case of unmounts
+      document.body.style.overflow = '';
+    };
+  }, []);
   
   // Form submission states
   const [consultationForm, setConsultationForm] = useState({ name: '', phone: '', email: '', course: 'General Consultation', message: '' });
@@ -121,6 +149,32 @@ export default function App() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Intersection Observer for scroll reveal animations
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -8% 0px', // triggers when elements are slightly inside the viewport
+      threshold: 0.02
+    };
+
+    const handleIntersect = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    const elementsToReveal = document.querySelectorAll('.reveal-on-scroll');
+    elementsToReveal.forEach(el => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [currentPage]);
 
   // Monitor scroll direction to show/hide header
   useEffect(() => {
@@ -236,6 +290,19 @@ export default function App() {
 
   return (
     <div className="bawra-academy">
+      {showPreloader && (
+        <div className={`bawra-preloader ${isPreloaderFading ? 'fade-out' : ''}`}>
+          <div className="preloader-content">
+            <div className="preloader-logo-wrapper">
+              <img src={logoImg} alt="Bawra Skill House Logo" className="preloader-logo" />
+              <div className="preloader-glow"></div>
+            </div>
+            <div className="preloader-progress-bar">
+              <div className="preloader-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Dynamic Glassmorphism Header */}
       <Header 
@@ -252,7 +319,7 @@ export default function App() {
       {/* ==================== PAGE 1: HOME ==================== */}
       {currentPage === 'home' && (
         <main className="page-fade-in">
-          <Hero triggerModal={triggerModal} />
+          <Hero triggerModal={triggerModal} showPreloader={showPreloader} />
           <Welcome navigateTo={navigateTo} />
           <CoursesHome navigateTo={navigateTo} triggerModal={triggerModal} />
           <WhoCanJoin />

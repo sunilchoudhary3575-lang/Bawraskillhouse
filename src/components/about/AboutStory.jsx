@@ -3,18 +3,23 @@ import { useMedia } from '../../context/MediaContext';
 
 export const AboutStory = () => {
   const { media } = useMedia();
+
   return (
     <section className="about-story-section">
-      <div className="container welcome-grid">
-        <div className="welcome-text">
-
+      <div className="container about-story-grid">
+        <div className="welcome-image-frame border-accent-gold">
+          <img src={media.aboutStory1} alt="Bawra Skill House Studio Layout 1" className="welcome-image" />
+          <div className="studio-caption glass">
+            <h4 className="gold-text">Workstation Lab</h4>
+            <p>High-end editing setups & creative workspaces</p>
+          </div>
         </div>
 
         <div className="welcome-image-frame border-accent-gold">
-          <img src={media.studioWorkstations} alt="Bawra Skill House Studio Layout" className="welcome-image" />
+          <img src={media.aboutStory2} alt="Bawra Skill House Studio Layout 2" className="welcome-image" />
           <div className="studio-caption glass">
-            <h4 className="gold-text">Bawra Skill House</h4>
-            <p>Our Jodhpur Creative Studio campus environment</p>
+            <h4 className="gold-text">Collaboration Zone</h4>
+            <p>Where students discuss ideas & design briefs</p>
           </div>
         </div>
       </div>

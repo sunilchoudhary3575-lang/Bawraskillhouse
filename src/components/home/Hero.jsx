@@ -1,12 +1,66 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Icons from '../Icons';
 import { useMedia } from '../../context/MediaContext';
 
-export const Hero = ({ triggerModal }) => {
+export const Hero = ({ triggerModal, showPreloader }) => {
   const { media } = useMedia();
+  const iframeRef = useRef(null);
+  const sectionRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const hasBeenPausedRef = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          if (entry.isIntersecting) {
+            // Play video when visible, but only if it hasn't been paused by scroll yet
+            if (!hasBeenPausedRef.current) {
+              iframeRef.current.contentWindow.postMessage(
+                JSON.stringify({ event: 'command', func: 'playVideo' }),
+                '*'
+              );
+            }
+          } else {
+            // Pause video when scrolled out of view and set the paused flag
+            iframeRef.current.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'pauseVideo' }),
+              '*'
+            );
+            hasBeenPausedRef.current = true;
+          }
+        }
+      },
+      {
+        threshold: 0.1 // Trigger when at least 10% of the section is visible
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  const toggleMute = () => {
+    if (iframeRef.current) {
+      const command = isMuted ? 'unMute' : 'mute';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command }),
+        '*'
+      );
+      setIsMuted(!isMuted);
+    }
+  };
 
   return (
-    <section className="hero-section">
+    <section ref={sectionRef} className="hero-section">
       <div className="container hero-grid">
         <div className="hero-text-top">
           <div className="academy-badge">
@@ -45,8 +99,37 @@ export const Hero = ({ triggerModal }) => {
         </div>
 
         <div className="hero-media-wrapper">
-          <div className="hero-frame">
-            <img src={media.heroWorkspace} alt="Luxury Studio Workspace" className="hero-image" />
+          <div className="hero-frame" style={{ position: 'relative' }}>
+            {!showPreloader ? (
+              <iframe
+                ref={iframeRef}
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/VvEc6b_nwgY?autoplay=1&mute=0&loop=1&playlist=VvEc6b_nwgY&controls=0&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1"
+                title="Bawra Skill House Intro Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ border: 'none', display: 'block' }}
+              ></iframe>
+            ) : (
+              <div style={{ width: '100%', height: '100%', background: '#000' }}></div>
+            )}
+            <button 
+              onClick={toggleMute} 
+              className="hero-mute-btn"
+              aria-label={isMuted ? "Unmute Video" : "Mute Video"}
+            >
+              {isMuted ? (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+              )}
+            </button>
           </div>
         </div>
 
