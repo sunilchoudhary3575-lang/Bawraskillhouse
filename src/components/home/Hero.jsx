@@ -7,6 +7,7 @@ export const Hero = ({ triggerModal, showPreloader }) => {
   const iframeRef = useRef(null);
   const sectionRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isCcOn, setIsCcOn] = useState(false);
 
   const hasBeenPausedRef = useRef(false);
 
@@ -56,6 +57,17 @@ export const Hero = ({ triggerModal, showPreloader }) => {
         '*'
       );
       setIsMuted(!isMuted);
+    }
+  };
+
+  const toggleCc = () => {
+    if (iframeRef.current) {
+      const command = isCcOn ? 'unloadModule' : 'loadModule';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: ['captions'] }),
+        '*'
+      );
+      setIsCcOn(!isCcOn);
     }
   };
 
@@ -129,6 +141,20 @@ export const Hero = ({ triggerModal, showPreloader }) => {
                   <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
                 </svg>
               )}
+            </button>
+            <button 
+              onClick={toggleCc} 
+              className="hero-cc-btn"
+              style={{
+                color: isCcOn ? 'var(--gold-primary)' : '#fff',
+                borderColor: isCcOn ? 'var(--gold-primary)' : 'rgba(255, 255, 255, 0.2)',
+                boxShadow: isCcOn ? '0 0 15px rgba(255, 154, 0, 0.35)' : 'none'
+              }}
+              aria-label={isCcOn ? "Turn Off Captions" : "Turn On Captions"}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/>
+              </svg>
             </button>
           </div>
         </div>

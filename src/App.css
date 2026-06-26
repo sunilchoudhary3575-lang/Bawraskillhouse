@@ -6846,11 +6846,11 @@ body {
   }
 }
 
-/* Custom Hero Mute Toggle Button */
-.hero-mute-btn {
+/* Custom Hero Mute & CC Toggle Buttons */
+.hero-mute-btn,
+.hero-cc-btn {
   position: absolute;
   top: 1.25rem;
-  right: 1.25rem;
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -6868,7 +6868,16 @@ body {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.hero-mute-btn:hover {
+.hero-mute-btn {
+  right: 1.25rem;
+}
+
+.hero-cc-btn {
+  right: 4.5rem;
+}
+
+.hero-mute-btn:hover,
+.hero-cc-btn:hover {
   background: var(--gold-primary);
   border-color: var(--gold-primary);
   color: #05070f;
@@ -6876,7 +6885,8 @@ body {
   box-shadow: 0 0 20px rgba(255, 154, 0, 0.45);
 }
 
-.hero-mute-btn svg {
+.hero-mute-btn svg,
+.hero-cc-btn svg {
   width: 20px;
   height: 20px;
 }
