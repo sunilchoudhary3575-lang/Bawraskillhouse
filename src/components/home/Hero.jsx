@@ -9,27 +9,16 @@ export const Hero = ({ triggerModal, showPreloader }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isCcOn, setIsCcOn] = useState(false);
 
-  const hasBeenPausedRef = useRef(false);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (iframeRef.current && iframeRef.current.contentWindow) {
-          if (entry.isIntersecting) {
-            // Play video when visible, but only if it hasn't been paused by scroll yet
-            if (!hasBeenPausedRef.current) {
-              iframeRef.current.contentWindow.postMessage(
-                JSON.stringify({ event: 'command', func: 'playVideo' }),
-                '*'
-              );
-            }
-          } else {
-            // Pause video when scrolled out of view and set the paused flag
+          if (!entry.isIntersecting) {
+            // Pause video when scrolled out of view
             iframeRef.current.contentWindow.postMessage(
               JSON.stringify({ event: 'command', func: 'pauseVideo' }),
               '*'
             );
-            hasBeenPausedRef.current = true;
           }
         }
       },
@@ -117,7 +106,7 @@ export const Hero = ({ triggerModal, showPreloader }) => {
                 ref={iframeRef}
                 width="100%"
                 height="100%"
-                src="https://www.youtube.com/embed/VvEc6b_nwgY?autoplay=1&mute=0&loop=1&playlist=VvEc6b_nwgY&controls=0&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1"
+                src="https://www.youtube.com/embed/VvEc6b_nwgY?autoplay=0&mute=0&loop=1&playlist=VvEc6b_nwgY&controls=1&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1"
                 title="Bawra Skill House Intro Video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

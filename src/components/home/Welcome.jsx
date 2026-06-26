@@ -67,6 +67,7 @@ export const Welcome = ({ navigateTo }) => {
               src={imgSrc}
               alt={`Bawra Classroom Scene ${idx + 1}`}
               className={`welcome-image welcome-slide ${idx === currentSlide ? 'active' : ''}`}
+              loading={idx === 0 ? "eager" : "lazy"}
             />
           ))}
 

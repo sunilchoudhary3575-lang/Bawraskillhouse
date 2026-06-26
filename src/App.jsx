@@ -10,43 +10,38 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import MobileStickyCTA from './components/MobileStickyCTA';
-import ConsultationModal from './components/ConsultationModal';
 
-// Home Page Components
+// Lazy Loaded Components for Optimization
+const ConsultationModal = React.lazy(() => import('./components/ConsultationModal'));
+const AboutHero = React.lazy(() => import('./components/about/AboutHero'));
+const AboutStory = React.lazy(() => import('./components/about/AboutStory'));
+const AboutMission = React.lazy(() => import('./components/about/AboutMission'));
+const AboutFounder = React.lazy(() => import('./components/about/AboutFounder'));
+const AboutMilestones = React.lazy(() => import('./components/about/AboutMilestones'));
+const AboutWhy = React.lazy(() => import('./components/about/AboutWhy'));
+const AboutClosing = React.lazy(() => import('./components/about/AboutClosing'));
+
+const CoursesListings = React.lazy(() => import('./components/courses/CoursesListings'));
+const ModulesBreakdown = React.lazy(() => import('./components/courses/ModulesBreakdown'));
+
+const TestimonialContent = React.lazy(() => import('./components/testimonial/TestimonialContent'));
+
+const CareerOpportunities = React.lazy(() => import('./components/career/CareerOpportunities'));
+
+const ContactDetails = React.lazy(() => import('./components/contact/ContactDetails'));
+const ContactForm = React.lazy(() => import('./components/contact/ContactForm'));
+
+const AdminPage = React.lazy(() => import('./components/AdminPage'));
+
+// Home Page Components (Statically loaded for instant render)
 import Hero from './components/home/Hero';
 import Welcome from './components/home/Welcome';
 import CoursesHome from './components/home/CoursesHome';
 import WhoCanJoin from './components/home/WhoCanJoin';
 import WhyChoose from './components/home/WhyChoose';
 
-// About Us Page Components
-import AboutHero from './components/about/AboutHero';
-import AboutStory from './components/about/AboutStory';
-import AboutMission from './components/about/AboutMission';
-import AboutFounder from './components/about/AboutFounder';
-import AboutMilestones from './components/about/AboutMilestones';
-import AboutWhy from './components/about/AboutWhy';
-import AboutClosing from './components/about/AboutClosing';
-
-// Courses Page Components
-import CoursesListings from './components/courses/CoursesListings';
-import ModulesBreakdown from './components/courses/ModulesBreakdown';
-
-// Testimonial Page Components
-import TestimonialContent from './components/testimonial/TestimonialContent';
-
-// Career Page Components
-import CareerOpportunities from './components/career/CareerOpportunities';
-
-// Contact Page Components
-import ContactDetails from './components/contact/ContactDetails';
-import ContactForm from './components/contact/ContactForm';
-
 // Floating Scroll Popup
 import LeadPopup from './components/LeadPopup';
-
-// Admin Page Component
-import AdminPage from './components/AdminPage';
 
 export default function App() {
   const { media } = useMedia();
@@ -314,80 +309,87 @@ export default function App() {
         triggerModal={triggerModal}
       />
 
-      {/* Dynamic Pages Render */}
-      
-      {/* ==================== PAGE 1: HOME ==================== */}
-      {currentPage === 'home' && (
-        <main className="page-fade-in">
-          <Hero triggerModal={triggerModal} showPreloader={showPreloader} />
-          <Welcome navigateTo={navigateTo} />
-          <CoursesHome navigateTo={navigateTo} triggerModal={triggerModal} />
-          <WhoCanJoin />
-          <WhyChoose />
-        </main>
-      )}
+      {/* Dynamic Pages Render with Suspense for Performance Optimization */}
+      <React.Suspense fallback={
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="preloader-progress-bar" style={{ width: '100px', height: '4px' }}>
+            <div className="preloader-progress-fill" style={{ animationDuration: '0.8s', width: '100%' }}></div>
+          </div>
+        </div>
+      }>
+        {/* ==================== PAGE 1: HOME ==================== */}
+        {currentPage === 'home' && (
+          <main className="page-fade-in">
+            <Hero triggerModal={triggerModal} showPreloader={showPreloader} />
+            <Welcome navigateTo={navigateTo} />
+            <CoursesHome navigateTo={navigateTo} triggerModal={triggerModal} />
+            <WhoCanJoin />
+            <WhyChoose />
+          </main>
+        )}
 
-      {/* ==================== PAGE 2: ABOUT US ==================== */}
-      {currentPage === 'about' && (
-        <main className="page-fade-in">
-          <AboutHero navigateTo={navigateTo} />
-          <AboutStory />
-          <AboutMission />
-          <AboutFounder />
-          <AboutMilestones />
-          <AboutWhy />
-          <AboutClosing triggerModal={triggerModal} navigateTo={navigateTo} />
-        </main>
-      )}
+        {/* ==================== PAGE 2: ABOUT US ==================== */}
+        {currentPage === 'about' && (
+          <main className="page-fade-in">
+            <AboutHero navigateTo={navigateTo} />
+            <AboutStory />
+            <AboutMission />
+            <AboutFounder />
+            <AboutMilestones />
+            <AboutWhy />
+            <AboutClosing triggerModal={triggerModal} navigateTo={navigateTo} />
+          </main>
+        )}
 
-      {/* ==================== PAGE 3: COURSES ==================== */}
-      {currentPage === 'courses' && (
-        <main className="page-fade-in">
-          <CoursesListings triggerModal={triggerModal} navigateTo={navigateTo} />
-          <ModulesBreakdown triggerModal={triggerModal} />
-        </main>
-      )}
+        {/* ==================== PAGE 3: COURSES ==================== */}
+        {currentPage === 'courses' && (
+          <main className="page-fade-in">
+            <CoursesListings triggerModal={triggerModal} navigateTo={navigateTo} />
+            <ModulesBreakdown triggerModal={triggerModal} />
+          </main>
+        )}
 
-      {/* ==================== PAGE 4: TESTIMONIAL ==================== */}
-      {currentPage === 'portfolio' && (
-        <main className="page-fade-in">
-          <TestimonialContent 
-            portfolioFilter={portfolioFilter}
-            setPortfolioFilter={setPortfolioFilter}
-            filteredPortfolio={filteredPortfolio}
-            triggerModal={triggerModal}
-            navigateTo={navigateTo}
-          />
-        </main>
-      )}
-
-      {/* ==================== PAGE 5: CAREER ==================== */}
-      {currentPage === 'career' && (
-        <main className="page-fade-in">
-          <CareerOpportunities navigateTo={navigateTo} />
-        </main>
-      )}
-
-      {/* ==================== PAGE 6: CONTACT US ==================== */}
-      {currentPage === 'contact' && (
-        <main className="page-fade-in">
-          <ContactDetails navigateTo={navigateTo}>
-            <ContactForm 
-              consultationForm={consultationForm}
-              setConsultationForm={setConsultationForm}
-              formSubmitted={formSubmitted}
-              handleFormSubmit={handleFormSubmit}
+        {/* ==================== PAGE 4: TESTIMONIAL ==================== */}
+        {currentPage === 'portfolio' && (
+          <main className="page-fade-in">
+            <TestimonialContent 
+              portfolioFilter={portfolioFilter}
+              setPortfolioFilter={setPortfolioFilter}
+              filteredPortfolio={filteredPortfolio}
+              triggerModal={triggerModal}
+              navigateTo={navigateTo}
             />
-          </ContactDetails>
-        </main>
-      )}
+          </main>
+        )}
 
-      {/* ==================== PAGE 7: ADMIN PORTAL ==================== */}
-      {currentPage === 'admin' && (
-        <main className="page-fade-in" style={{ paddingTop: '80px' }}>
-          <AdminPage />
-        </main>
-      )}
+        {/* ==================== PAGE 5: CAREER ==================== */}
+        {currentPage === 'career' && (
+          <main className="page-fade-in">
+            <CareerOpportunities navigateTo={navigateTo} />
+          </main>
+        )}
+
+        {/* ==================== PAGE 6: CONTACT US ==================== */}
+        {currentPage === 'contact' && (
+          <main className="page-fade-in">
+            <ContactDetails navigateTo={navigateTo}>
+              <ContactForm 
+                consultationForm={consultationForm}
+                setConsultationForm={setConsultationForm}
+                formSubmitted={formSubmitted}
+                handleFormSubmit={handleFormSubmit}
+              />
+            </ContactDetails>
+          </main>
+        )}
+
+        {/* ==================== PAGE 7: ADMIN PORTAL ==================== */}
+        {currentPage === 'admin' && (
+          <main className="page-fade-in" style={{ paddingTop: '80px' }}>
+            <AdminPage />
+          </main>
+        )}
+      </React.Suspense>
 
       {/* ==================== COMMON FOOTER ==================== */}
       <Footer navigateTo={navigateTo} />
@@ -402,15 +404,17 @@ export default function App() {
       <WhatsAppButton />
 
       {/* Booking Consultation Modal */}
-      <ConsultationModal 
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-        modalCourse={modalCourse}
-        consultationForm={consultationForm}
-        setConsultationForm={setConsultationForm}
-        formSubmitted={formSubmitted}
-        handleFormSubmit={handleFormSubmit}
-      />
+      <React.Suspense fallback={null}>
+        <ConsultationModal 
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+          modalCourse={modalCourse}
+          consultationForm={consultationForm}
+          setConsultationForm={setConsultationForm}
+          formSubmitted={formSubmitted}
+          handleFormSubmit={handleFormSubmit}
+        />
+      </React.Suspense>
 
       {/* Floating Scroll-triggered Lead Ad Popup */}
       <LeadPopup />

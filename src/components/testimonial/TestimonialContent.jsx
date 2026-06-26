@@ -34,6 +34,32 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
     };
   }, [playingVideoIndex]);
 
+  // Intersection Observer for scroll reveal animations on Testimonial page
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -8% 0px',
+      threshold: 0.02
+    };
+
+    const handleIntersect = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    const elementsToReveal = document.querySelectorAll('.reveal-on-scroll');
+    elementsToReveal.forEach(el => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const videoStories = [
     { id: 0, title: 'Transformation Story 1', youtubeId: 'zp9I0peykis', duration: '0:50' },
     { id: 1, title: 'Transformation Story 2', youtubeId: '1qg3ch0z0VU', duration: '0:45' },
@@ -157,6 +183,7 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
                             alt={story.title} 
                             className="video-thumbnail-img"
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
                           />
                           <div className="play-button-overlay">
                             <svg viewBox="0 0 24 24" fill="currentColor" className="play-icon-svg">

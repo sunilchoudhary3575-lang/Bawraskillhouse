@@ -6747,7 +6747,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #05070f; /* Deep dark theme background */
+  background-color: #ffffff; /* White background as requested */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -6786,24 +6786,17 @@ body {
   height: auto;
   object-fit: contain;
   z-index: 2;
-  filter: drop-shadow(0 0 25px rgba(255, 170, 0, 0.65)) drop-shadow(0 0 8px rgba(255, 154, 0, 0.4)) brightness(1.15);
+  filter: none; /* Removed drop shadow and brightness filters */
 }
 
 .preloader-glow {
-  position: absolute;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(circle, rgba(255, 154, 0, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  z-index: 1;
-  filter: blur(10px);
-  animation: preloader-glow-expand 2s ease-in-out infinite alternate;
+  display: none; /* Hide background glowing circle */
 }
 
 .preloader-progress-bar {
   width: 140px;
   height: 3px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.1); /* Gray track visible on white background */
   border-radius: 4px;
   overflow: hidden;
 }
