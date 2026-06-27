@@ -237,6 +237,48 @@ export default function App() {
         submittedAt: new Date().toISOString(),
         source: currentPage === 'contact' ? 'contact_page' : 'consultation_modal'
       });
+
+      // Send to Google Sheets if URL is configured in environment variables
+      const googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
+      if (googleSheetUrl) {
+        try {
+          if (isEnquiry) {
+            await fetch(googleSheetUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+              },
+              body: JSON.stringify({
+                action: "enquiry",
+                name: consultationForm.name,
+                phone: consultationForm.phone,
+                email: consultationForm.email || "",
+                message: consultationForm.message || "",
+                source: "Hero Form",
+              }),
+            });
+          } else {
+            await fetch(googleSheetUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+              },
+              body: JSON.stringify({
+                action: "enrollment",
+                name: consultationForm.name,
+                phone: consultationForm.phone,
+                email: consultationForm.email || "",
+                course: consultationForm.course || "General Consultation",
+                message: consultationForm.message || "",
+                source: "Course Page",
+              }),
+            });
+          }
+        } catch (sheetErr) {
+          console.error('Google Sheets submission error:', sheetErr);
+        }
+      }
+
       setFormSubmitted(false);
       setIsModalOpen(false);
       setConsultationForm({ name: '', phone: '', email: '', course: 'General Consultation', message: '' });

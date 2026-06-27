@@ -168,7 +168,7 @@ export const Icons = {
   ),
   Camera: () => (
     <svg className="software-icon cm" viewBox="0 0 24 24">
-      <rect width="24" height="24" rx="4" fill="#0E121A" />
+      <rect width="24" height="24" rx="4" fill="#ffffff" />
       <path d="M4 9h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z" fill="#2E3440" />
       <rect x="6" y="6" width="3" height="3" rx="1" fill="#4C566A" />
       <rect x="15" y="7" width="4" height="2" rx="0.5" fill="#4C566A" />
@@ -183,26 +183,27 @@ export const Icons = {
   ),
   Drone: () => (
     <svg className="software-icon drn" viewBox="0 0 24 24">
-      <rect width="24" height="24" rx="4" fill="#0E121A" />
-      <line x1="6" y1="6" x2="18" y2="18" stroke="#D8DEE9" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#D8DEE9" strokeWidth="1.8" strokeLinecap="round" />
-      <rect x="9.5" y="9.5" width="5" height="5" rx="1.5" fill="#ECEFF4" stroke="#4C566A" strokeWidth="0.8" />
-      <circle cx="12" cy="12" r="1.2" fill="#88C0D0" />
-      <circle cx="6" cy="6" r="1.5" fill="#3B4252" />
-      <circle cx="18" cy="6" r="1.5" fill="#3B4252" />
-      <circle cx="6" cy="18" r="1.5" fill="#3B4252" />
-      <circle cx="18" cy="18" r="1.5" fill="#3B4252" />
-      <ellipse cx="6" cy="6" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(30 6 6)" />
-      <ellipse cx="18" cy="6" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(-30 18 6)" />
-      <ellipse cx="6" cy="18" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(-30 6 18)" />
-      <ellipse cx="18" cy="18" rx="4" ry="1" fill="#FFFFFF" fillOpacity="0.4" stroke="#88C0D0" strokeWidth="0.3" strokeOpacity="0.8" transform="rotate(30 18 18)" />
-      <circle cx="10" cy="10" r="0.6" fill="#A3BE8C" />
-      <circle cx="14" cy="10" r="0.6" fill="#BF616A" />
+      <rect width="24" height="24" rx="4" fill="#ffffff" />
+      {/* Arms */}
+      <path d="M5 5l4 4m10-4l-4 4M5 19l4-4m10 4l-4-4" stroke="#4C566A" strokeWidth="1.8" strokeLinecap="round" />
+      {/* Motors */}
+      <circle cx="5" cy="5" r="1.2" fill="#FF5E5B" />
+      <circle cx="19" cy="5" r="1.2" fill="#FF5E5B" />
+      <circle cx="5" cy="19" r="1.2" fill="#4C566A" />
+      <circle cx="19" cy="19" r="1.2" fill="#4C566A" />
+      {/* Propellers */}
+      <path d="M2 5h6M16 5h6M2 19h6M16 19h6" stroke="#88C0D0" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Center Body */}
+      <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#2E3440" stroke="#4C566A" strokeWidth="0.8" />
+      <circle cx="12" cy="12" r="1.5" fill="#88C0D0" />
+      {/* Camera Gimbal */}
+      <path d="M11 15v2h2v-2" fill="none" stroke="#D8DEE9" strokeWidth="1" strokeLinecap="round" />
+      <circle cx="12" cy="17.5" r="0.8" fill="#FF9A00" />
     </svg>
   ),
   Mic: () => (
     <svg className="software-icon mc" viewBox="0 0 24 24">
-      <rect width="24" height="24" rx="4" fill="#0E121A" />
+      <rect width="24" height="24" rx="4" fill="#ffffff" />
       <rect x="7" y="7" width="10" height="12" rx="2" fill="#2E3440" stroke="#4C566A" strokeWidth="0.8" />
       <rect x="9" y="10" width="6" height="3" rx="0.5" fill="#1A1F29" />
       <rect x="10" y="11.2" width="4" height="0.6" fill="#A3BE8C" />
@@ -213,7 +214,7 @@ export const Icons = {
       <line x1="9.5" y1="6" x2="14.5" y2="6" stroke="#3B4252" strokeWidth="0.5" />
       <line x1="8" y1="9" x2="8" y2="17" stroke="#E5E9F0" strokeWidth="1" strokeLinecap="round" />
     </svg>
-  )
+  ),
 };
 
 export default Icons;

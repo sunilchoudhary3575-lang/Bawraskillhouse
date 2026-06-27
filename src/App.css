@@ -6883,3 +6883,27 @@ body {
   width: 20px;
   height: 20px;
 }
+
+/* Make Video Editing card (blue featured card) icons stand out with a white background */
+.blue-card .course-outcome-pricing .software-icon rect {
+  fill: #ffffff !important;
+}
+
+.blue-card .course-outcome-pricing .software-icon.pr text {
+  fill: #140026 !important; /* Original dark Premiere purple */
+}
+
+.blue-card .course-outcome-pricing .software-icon.ae text {
+  fill: #14002b !important; /* Original dark AE purple */
+}
+
+.blue-card .course-outcome-pricing .software-icon.dr circle:not([stroke]) {
+  fill: #ffffff !important; /* Make the inner background white for DaVinci */
+}
+
+/* Add light border to the white-background camera, drone, and mic icons in white cards for definition */
+.white-card .course-outcome-pricing .software-icon.cm,
+.white-card .course-outcome-pricing .software-icon.drn,
+.white-card .course-outcome-pricing .software-icon.mc {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
