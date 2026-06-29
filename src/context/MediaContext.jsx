@@ -14,6 +14,12 @@ import studioWorkstationsDefault from '../assets/studio_workstations.png';
 import founderRawalSinghDefault from '../assets/founder_rawal_singh.jpg';
 import aboutStory1Default from '../assets/about_story_1.jpg';
 import aboutStory2Default from '../assets/about_story_2.jpg';
+import courseGraphicDefault from '../assets/course_graphic.jpg';
+import courseSocialDefault from '../assets/course_social.jpg';
+import courseSocialPhoneDefault from '../assets/course_social_phone.jpg';
+import coursePerformanceExtraDefault from '../assets/course_performance_extra.jpg';
+import courseCinematography1Default from '../assets/course_cinematography_1.jpg';
+import courseCinematography2Default from '../assets/course_cinematography_2.jpg';
 
 // Create context
 const MediaContext = createContext();
@@ -129,7 +135,7 @@ export const MEDIA_ITEMS = [
     label: 'Graphic Designing Course Workstation',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80',
+    default: courseGraphicDefault,
   },
   {
     key: 'course_video',
@@ -143,7 +149,14 @@ export const MEDIA_ITEMS = [
     label: 'Social Media Strategy Workspace',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80',
+    default: courseSocialDefault,
+  },
+  {
+    key: 'course_social_phone',
+    label: 'Social Media Phone Mockup',
+    section: 'Course Details',
+    type: 'image',
+    default: courseSocialPhoneDefault,
   },
   {
     key: 'course_performance',
@@ -153,11 +166,25 @@ export const MEDIA_ITEMS = [
     default: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80',
   },
   {
-    key: 'course_cinematography',
-    label: 'Cinematography DSLR Shooting',
+    key: 'course_performance_extra',
+    label: 'Performance Marketing Extra Dashboard',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=600&q=80',
+    default: coursePerformanceExtraDefault,
+  },
+  {
+    key: 'course_cinematography_1',
+    label: 'Cinematography Viewfinder Shoot',
+    section: 'Course Details',
+    type: 'image',
+    default: courseCinematography1Default,
+  },
+  {
+    key: 'course_cinematography_2',
+    label: 'Cinematography Clapperboard Lenses',
+    section: 'Course Details',
+    type: 'image',
+    default: courseCinematography2Default,
   },
 
   // SECTION: TESTIMONIAL VIDEOS
@@ -305,14 +332,35 @@ export const MediaProvider = ({ children }) => {
     const initialMedia = {};
     MEDIA_ITEMS.forEach(item => {
       let stored = localStorage.getItem(`bawra_media_${item.key}`);
-      // Bust old pen/book course_graphic image to load the new premium technical design monitor image
-      if (item.key === 'course_graphic' && stored && (stored.includes('photo-1581291518633-83b4ebd1d83e') || stored.includes('photo-1561070791-26c113006238'))) {
+      // Bust old pen/book/unsplash course_graphic image to load the new custom user uploaded design monitor image
+      if (item.key === 'course_graphic' && stored && (stored.includes('photo-1581291518633-83b4ebd1d83e') || stored.includes('photo-1561070791-26c113006238') || stored.includes('photo-1626785774573-4b799315345d'))) {
         localStorage.removeItem('bawra_media_course_graphic');
         stored = null;
       }
       // Bust cached founder image to immediately load the new default image
       if (item.key === 'founderRawalSingh' && stored) {
         localStorage.removeItem('bawra_media_founderRawalSingh');
+        stored = null;
+      }
+      // Bust cached social media course image to immediately load the new default image
+      if (item.key === 'course_social' && stored) {
+        localStorage.removeItem('bawra_media_course_social');
+        stored = null;
+      }
+      if (item.key === 'course_social_phone' && stored) {
+        localStorage.removeItem('bawra_media_course_social_phone');
+        stored = null;
+      }
+      if (item.key === 'course_performance_extra' && stored) {
+        localStorage.removeItem('bawra_media_course_performance_extra');
+        stored = null;
+      }
+      if (item.key === 'course_cinematography_1' && stored) {
+        localStorage.removeItem('bawra_media_course_cinematography_1');
+        stored = null;
+      }
+      if (item.key === 'course_cinematography_2' && stored) {
+        localStorage.removeItem('bawra_media_course_cinematography_2');
         stored = null;
       }
       // Bust cached welcome slideshow images to immediately load the new default images

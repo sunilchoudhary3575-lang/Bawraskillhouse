@@ -127,8 +127,13 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               <span className="course-label-badge">SINGLE PROGRAM • 45 DAYS</span>
               <h2>Social Media Marketing</h2>
               <p className="outcome-tag">Instagram | YouTube | LinkedIn | Strategy</p>
-              <div className="course-inline-image">
-                <img src={media.course_social} alt="Social Media Strategy Workspace" />
+              <div className="course-inline-images-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', margin: '1.5rem 0', maxWidth: '800px' }}>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_social_phone} alt="Social Media Phone Mockup" />
+                </div>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_social} alt="Social Media Strategy Workspace" />
+                </div>
               </div>
               <p className="price-tag gold-text">₹34,999/-</p>
               <div className="software-row-listing">
@@ -178,8 +183,13 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               <span className="course-label-badge">SINGLE PROGRAM • 30 DAYS</span>
               <h2>Performance Marketing</h2>
               <p className="outcome-tag">Meta Ads | Google Ads | Analytics</p>
-              <div className="course-inline-image">
-                <img src={media.course_performance} alt="Performance Advertising Analytics" />
+              <div className="course-inline-images-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', margin: '1.5rem 0', maxWidth: '800px' }}>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_performance} alt="Performance Advertising Analytics" />
+                </div>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_performance_extra} alt="Performance Marketing Dashboard" />
+                </div>
               </div>
               <p className="price-tag gold-text">₹29,999/-</p>
               <div className="software-row-listing ads-platform-row">
@@ -228,8 +238,13 @@ export const CoursesListings = ({ triggerModal, navigateTo }) => {
               <span className="course-label-badge">SINGLE PROGRAM • 45 DAYS</span>
               <h2>Cinematography & Shooting</h2>
               <p className="outcome-tag">Camera (DSLR/Mirrorless) | Gimbal | Drone</p>
-              <div className="course-inline-image">
-                <img src={media.course_cinematography} alt="Cinematography DSLR Shooting" />
+              <div className="course-inline-images-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', margin: '1.5rem 0', maxWidth: '800px' }}>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_cinematography_1} alt="Cinematography DSLR Shooting Set" />
+                </div>
+                <div className="course-inline-image" style={{ flex: '1 1 280px', margin: 0 }}>
+                  <img src={media.course_cinematography_2} alt="Cinematography Clapperboard Gear" />
+                </div>
               </div>
               <p className="price-tag gold-text">₹39,999/-</p>
               <div className="software-row-listing" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
