@@ -240,11 +240,13 @@ export default function App() {
 
       // Send to Google Sheets if URL is configured in environment variables
       const googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
+      console.log('Google Sheets URL from env:', googleSheetUrl);
       if (googleSheetUrl) {
         try {
           if (isEnquiry) {
             await fetch(googleSheetUrl, {
               method: "POST",
+              mode: "no-cors",
               headers: {
                 "Content-Type": "text/plain;charset=utf-8",
               },
@@ -260,6 +262,7 @@ export default function App() {
           } else {
             await fetch(googleSheetUrl, {
               method: "POST",
+              mode: "no-cors",
               headers: {
                 "Content-Type": "text/plain;charset=utf-8",
               },
