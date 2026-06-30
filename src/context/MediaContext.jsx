@@ -14,12 +14,13 @@ import studioWorkstationsDefault from '../assets/studio_workstations.png';
 import founderRawalSinghDefault from '../assets/founder_rawal_singh.jpg';
 import aboutStory1Default from '../assets/about_story_1.jpg';
 import aboutStory2Default from '../assets/about_story_2.jpg';
-import courseGraphicDefault from '../assets/course_graphic.jpg';
-import courseSocialDefault from '../assets/course_social.jpg';
-import courseSocialPhoneDefault from '../assets/course_social_phone.jpg';
-import coursePerformanceExtraDefault from '../assets/course_performance_extra.jpg';
-import courseCinematography1Default from '../assets/course_cinematography_1.jpg';
-import courseCinematography2Default from '../assets/course_cinematography_2.jpg';
+import courseGraphicDefault from '../assets/course_graphic.png';
+import courseVideoDefault from '../assets/course_video.png';
+import courseSocialDefault from '../assets/course_social.png';
+import courseSocialPhoneDefault from '../assets/course_social_phone.png';
+import coursePerformanceDefault from '../assets/course_performance.png';
+import courseCinematography1Default from '../assets/course_cinematography_1.png';
+import courseCinematography2Default from '../assets/course_cinematography_2.png';
 
 // Create context
 const MediaContext = createContext();
@@ -142,7 +143,7 @@ export const MEDIA_ITEMS = [
     label: 'Video Editing Course Workspace',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=600&q=80',
+    default: courseVideoDefault,
   },
   {
     key: 'course_social',
@@ -163,15 +164,9 @@ export const MEDIA_ITEMS = [
     label: 'Performance Advertising Analytics',
     section: 'Course Details',
     type: 'image',
-    default: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80',
+    default: coursePerformanceDefault,
   },
-  {
-    key: 'course_performance_extra',
-    label: 'Performance Marketing Extra Dashboard',
-    section: 'Course Details',
-    type: 'image',
-    default: coursePerformanceExtraDefault,
-  },
+
   {
     key: 'course_cinematography_1',
     label: 'Cinematography Viewfinder Shoot',
@@ -337,6 +332,10 @@ export const MediaProvider = ({ children }) => {
         localStorage.removeItem('bawra_media_course_graphic');
         stored = null;
       }
+      if (item.key === 'course_video' && stored) {
+        localStorage.removeItem('bawra_media_course_video');
+        stored = null;
+      }
       // Bust cached founder image to immediately load the new default image
       if (item.key === 'founderRawalSingh' && stored) {
         localStorage.removeItem('bawra_media_founderRawalSingh');
@@ -351,10 +350,11 @@ export const MediaProvider = ({ children }) => {
         localStorage.removeItem('bawra_media_course_social_phone');
         stored = null;
       }
-      if (item.key === 'course_performance_extra' && stored) {
-        localStorage.removeItem('bawra_media_course_performance_extra');
+      if (item.key === 'course_performance' && stored) {
+        localStorage.removeItem('bawra_media_course_performance');
         stored = null;
       }
+
       if (item.key === 'course_cinematography_1' && stored) {
         localStorage.removeItem('bawra_media_course_cinematography_1');
         stored = null;
