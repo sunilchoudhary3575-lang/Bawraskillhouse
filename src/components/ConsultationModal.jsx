@@ -141,11 +141,12 @@ export const ConsultationModal = ({
                 {/* Collapsed Trigger showing current selection */}
                 {(() => {
                   const programs = [
-                    { id: 'Graphic Designing Course', aliases: ['Graphic Design Program', 'Graphic Designing Course'], name: 'Graphic Design', desc: '🎨 Design & Branding', activeColor: '#ff9a00', activeBg: 'rgba(255, 154, 0, 0.12)', activeBorder: 'rgba(255, 154, 0, 0.8)' },
-                    { id: 'Video Editing Course', aliases: ['Video Editing Program', 'Video Editing Course'], name: 'Video Editing', desc: '🎬 Storytelling & VFX', activeColor: '#d11a5b', activeBg: 'rgba(209, 26, 91, 0.12)', activeBorder: 'rgba(209, 26, 91, 0.8)' },
-                    { id: 'Social Media Marketing', aliases: ['Social Media Marketing'], name: 'Social Marketing', desc: '📱 Instagram & YouTube', activeColor: '#ff4b2b', activeBg: 'rgba(255, 75, 43, 0.12)', activeBorder: 'rgba(255, 75, 43, 0.8)' },
-                    { id: 'Performance Marketing', aliases: ['Performance Marketing'], name: 'Performance Ads', desc: '📈 Meta & Google Ads', activeColor: '#4caf50', activeBg: 'rgba(76, 175, 80, 0.12)', activeBorder: 'rgba(76, 175, 80, 0.8)' },
-                    { id: 'Cinematography Course', aliases: ['Cinematography Course', 'Cinematography & Shooting'], name: 'Cinematography', desc: '🎥 Camera, Gimbal & Drone', activeColor: '#e91e63', activeBg: 'rgba(233, 30, 99, 0.12)', activeBorder: 'rgba(233, 30, 99, 0.8)' }
+                    { id: 'Graphic Designing Course', aliases: ['Graphic Design Program', 'Graphic Designing Course'], name: 'Graphic Design (₹20,000)', desc: '🎨 45 Days • Ps + Ai', activeColor: '#ff9a00', activeBg: 'rgba(255, 154, 0, 0.12)', activeBorder: 'rgba(255, 154, 0, 0.8)' },
+                    { id: 'Video Editing Course', aliases: ['Video Editing Program', 'Video Editing Course'], name: 'Video Editing (₹20,000)', desc: '🎬 45 Days • Pr + Ae', activeColor: '#d11a5b', activeBg: 'rgba(209, 26, 91, 0.12)', activeBorder: 'rgba(209, 26, 91, 0.8)' },
+                    { id: 'Cinematography Course', aliases: ['Cinematography Course', 'Cinematography & Shooting'], name: 'Cinematography (₹35,000)', desc: '📹 45 Days • Camera, Gimbal & Drone', activeColor: '#e91e63', activeBg: 'rgba(233, 30, 99, 0.12)', activeBorder: 'rgba(233, 30, 99, 0.8)' },
+                    { id: 'Social Media Marketing', aliases: ['Social Media Marketing'], name: 'Social Marketing (₹35,000)', desc: '📱 45 Days • Meta & Google Ads', activeColor: '#ff4b2b', activeBg: 'rgba(255, 75, 43, 0.12)', activeBorder: 'rgba(255, 75, 43, 0.8)' },
+                    { id: 'Combo 1: Video Editing + Graphic Designing', aliases: ['Combo 1: Video Editing + Graphic Designing', 'Combo 1'], name: 'Combo 1: Editing + Design (₹30,000)', desc: '🔥 Save ₹10,000 • Ps + Ai + Pr + Ae', activeColor: '#00e676', activeBg: 'rgba(0, 230, 118, 0.15)', activeBorder: 'rgba(0, 230, 118, 0.8)' },
+                    { id: 'Combo 2: Video Editing + Cinematography', aliases: ['Combo 2: Video Editing + Cinematography', 'Combo 2'], name: 'Combo 2: Editing + Film (₹45,000)', desc: '🔥 Save ₹10,000 • Camera + Drone + Edit', activeColor: '#ff9a00', activeBg: 'rgba(255, 154, 0, 0.15)', activeBorder: 'rgba(255, 154, 0, 0.8)' }
                   ];
 
                   const selectedCourse = consultationForm.course || modalCourse || 'General Consultation';

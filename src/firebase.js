@@ -33,17 +33,33 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Safe initialization of Analytics
+// Safe initialization of Analytics (suppressed on localhost, dev IP addresses, and unsupported environments)
 let analytics = null;
-isSupported()
-  .then((supported) => {
-    if (supported) {
-      analytics = getAnalytics(app);
+if (typeof window !== 'undefined') {
+  const hostname = window.location.hostname;
+  const isLocalOrIP =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) ||
+    hostname.endsWith('.local');
+
+  if (!isLocalOrIP) {
+    try {
+      isSupported()
+        .then((supported) => {
+          if (supported) {
+            analytics = getAnalytics(app);
+          }
+        })
+        .catch((err) => {
+          console.warn('Firebase Analytics is not supported in this environment:', err);
+        });
+    } catch (err) {
+      console.warn('Firebase Analytics initialization skipped:', err);
     }
-  })
-  .catch((err) => {
-    console.warn('Firebase Analytics is not supported in this environment:', err);
-  });
+  }
+}
 
 export { app, auth, db, storage, googleProvider, analytics };
 

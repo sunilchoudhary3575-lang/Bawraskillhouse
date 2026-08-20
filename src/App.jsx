@@ -62,21 +62,29 @@ export default function App() {
     // Lock scroll on mount
     document.body.style.overflow = 'hidden';
 
-    // Start fading out after 1800ms
+    // Start fading out after 600ms
     const fadeTimeout = setTimeout(() => {
       setIsPreloaderFading(true);
       // Unlock scroll as it starts fading out
       document.body.style.overflow = '';
-    }, 1800);
+    }, 600);
 
-    // Completely unmount/remove the preloader after 2300ms (allowing 500ms fade transition)
+    // Completely unmount/remove the preloader after 1000ms (allowing 400ms fade transition)
     const unmountTimeout = setTimeout(() => {
       setShowPreloader(false);
-    }, 2300);
+    }, 1000);
+
+    // Safety fallback: Ensure preloader NEVER hangs on screen even on slow network devices
+    const safetyTimeout = setTimeout(() => {
+      setIsPreloaderFading(true);
+      setShowPreloader(false);
+      document.body.style.overflow = '';
+    }, 1500);
 
     return () => {
       clearTimeout(fadeTimeout);
       clearTimeout(unmountTimeout);
+      clearTimeout(safetyTimeout);
       // Reset body style just in case of unmounts
       document.body.style.overflow = '';
     };
@@ -145,29 +153,56 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Intersection Observer for scroll reveal animations
+  // Robust Scroll Reveal & Auto-Visibility Fallback
   useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px 0px -8% 0px', // triggers when elements are slightly inside the viewport
-      threshold: 0.02
+    let observer;
+
+    const setupObserver = () => {
+      const elementsToReveal = document.querySelectorAll('.reveal-on-scroll');
+      if (elementsToReveal.length === 0) return;
+
+      if (!('IntersectionObserver' in window)) {
+        elementsToReveal.forEach(el => el.classList.add('revealed'));
+        return;
+      }
+
+      const handleIntersect = (entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            obs.unobserve(entry.target);
+          }
+        });
+      };
+
+      if (!observer) {
+        observer = new IntersectionObserver(handleIntersect, {
+          root: null,
+          rootMargin: '100px 0px 100px 0px', // Generous margin so elements reveal smoothly before scrolling into view
+          threshold: 0.01
+        });
+      }
+
+      elementsToReveal.forEach(el => observer.observe(el));
     };
 
-    const handleIntersect = (entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
+    // Run setup immediately and after short delays for Suspense lazy loads
+    setupObserver();
+    const timer1 = setTimeout(setupObserver, 100);
+    const timer2 = setTimeout(setupObserver, 300);
+
+    // Guaranteed safety fallback: Reveal all elements after 400ms so nothing stays invisible
+    const safetyTimer = setTimeout(() => {
+      document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+        el.classList.add('revealed');
       });
-    };
-
-    const observer = new IntersectionObserver(handleIntersect, observerOptions);
-    const elementsToReveal = document.querySelectorAll('.reveal-on-scroll');
-    elementsToReveal.forEach(el => observer.observe(el));
+    }, 400);
 
     return () => {
-      observer.disconnect();
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(safetyTimer);
+      if (observer) observer.disconnect();
     };
   }, [currentPage]);
 

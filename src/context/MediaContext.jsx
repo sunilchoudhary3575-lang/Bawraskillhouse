@@ -274,17 +274,44 @@ export const MEDIA_ITEMS = [
 const dbName = 'BawraMediaDB';
 const storeName = 'media';
 
+const getItemSafe = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+};
+
+const setItemSafe = (key, val) => {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+};
+
+const removeItemSafe = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {}
+};
+
 const getDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 1);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(storeName)) {
-        db.createObjectStore(storeName);
+    try {
+      if (typeof indexedDB === 'undefined') {
+        return reject(new Error('IndexedDB not supported'));
       }
-    };
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
+      const request = indexedDB.open(dbName, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName);
+        }
+      };
+      request.onsuccess = (e) => resolve(e.target.result);
+      request.onerror = (e) => reject(e.target.error);
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
@@ -326,51 +353,51 @@ export const MediaProvider = ({ children }) => {
     // Generate initial state combining defaults & localStorage overrides
     const initialMedia = {};
     MEDIA_ITEMS.forEach(item => {
-      let stored = localStorage.getItem(`bawra_media_${item.key}`);
+      let stored = getItemSafe(`bawra_media_${item.key}`);
       // Bust old pen/book/unsplash course_graphic image to load the new custom user uploaded design monitor image
       if (item.key === 'course_graphic' && stored && (stored.includes('photo-1581291518633-83b4ebd1d83e') || stored.includes('photo-1561070791-26c113006238') || stored.includes('photo-1626785774573-4b799315345d'))) {
-        localStorage.removeItem('bawra_media_course_graphic');
+        removeItemSafe('bawra_media_course_graphic');
         stored = null;
       }
       if (item.key === 'course_video' && stored) {
-        localStorage.removeItem('bawra_media_course_video');
+        removeItemSafe('bawra_media_course_video');
         stored = null;
       }
       // Bust cached founder image to immediately load the new default image
       if (item.key === 'founderRawalSingh' && stored) {
-        localStorage.removeItem('bawra_media_founderRawalSingh');
+        removeItemSafe('bawra_media_founderRawalSingh');
         stored = null;
       }
       // Bust cached social media course image to immediately load the new default image
       if (item.key === 'course_social' && stored) {
-        localStorage.removeItem('bawra_media_course_social');
+        removeItemSafe('bawra_media_course_social');
         stored = null;
       }
       if (item.key === 'course_social_phone' && stored) {
-        localStorage.removeItem('bawra_media_course_social_phone');
+        removeItemSafe('bawra_media_course_social_phone');
         stored = null;
       }
       if (item.key === 'course_performance' && stored) {
-        localStorage.removeItem('bawra_media_course_performance');
+        removeItemSafe('bawra_media_course_performance');
         stored = null;
       }
 
       if (item.key === 'course_cinematography_1' && stored) {
-        localStorage.removeItem('bawra_media_course_cinematography_1');
+        removeItemSafe('bawra_media_course_cinematography_1');
         stored = null;
       }
       if (item.key === 'course_cinematography_2' && stored) {
-        localStorage.removeItem('bawra_media_course_cinematography_2');
+        removeItemSafe('bawra_media_course_cinematography_2');
         stored = null;
       }
       // Bust cached welcome slideshow images to immediately load the new default images
       if ((item.key === 'welcome1' || item.key === 'welcome2' || item.key === 'welcome3' || item.key === 'welcome5' || item.key === 'welcome6') && stored) {
-        localStorage.removeItem(`bawra_media_${item.key}`);
+        removeItemSafe(`bawra_media_${item.key}`);
         stored = null;
       }
       // Bust cached about story slideshow images to immediately load the new default images
       if ((item.key === 'aboutStory1' || item.key === 'aboutStory2') && stored) {
-        localStorage.removeItem(`bawra_media_${item.key}`);
+        removeItemSafe(`bawra_media_${item.key}`);
         stored = null;
       }
       initialMedia[item.key] = stored || item.default;
@@ -383,7 +410,7 @@ export const MediaProvider = ({ children }) => {
       const updatedMedia = { ...media };
       let changed = false;
       for (const item of MEDIA_ITEMS) {
-        const stored = localStorage.getItem(`bawra_media_${item.key}`);
+        const stored = getItemSafe(`bawra_media_${item.key}`);
         if (stored === 'indexeddb_blob') {
           try {
             const blob = await getFromDB(item.key);
@@ -408,7 +435,7 @@ export const MediaProvider = ({ children }) => {
       try {
         await saveToDB(key, value);
         const objectUrl = URL.createObjectURL(value);
-        localStorage.setItem(`bawra_media_${key}`, 'indexeddb_blob');
+        setItemSafe(`bawra_media_${key}`, 'indexeddb_blob');
         setMedia(prev => ({
           ...prev,
           [key]: objectUrl,
@@ -419,7 +446,7 @@ export const MediaProvider = ({ children }) => {
         throw err;
       }
     } else if (typeof value === 'string' && value.trim() !== '') {
-      localStorage.setItem(`bawra_media_${key}`, value.trim());
+      setItemSafe(`bawra_media_${key}`, value.trim());
       try {
         await deleteFromDB(key);
       } catch (err) {}
@@ -429,7 +456,7 @@ export const MediaProvider = ({ children }) => {
       }));
       return value.trim();
     } else {
-      localStorage.removeItem(`bawra_media_${key}`);
+      removeItemSafe(`bawra_media_${key}`);
       try {
         await deleteFromDB(key);
       } catch (err) {}
@@ -445,7 +472,7 @@ export const MediaProvider = ({ children }) => {
 
   const resetMedia = async () => {
     MEDIA_ITEMS.forEach(item => {
-      localStorage.removeItem(`bawra_media_${item.key}`);
+      removeItemSafe(`bawra_media_${item.key}`);
     });
     try {
       const db = await getDB();

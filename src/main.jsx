@@ -3,14 +3,17 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { MediaProvider } from './context/MediaContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import './firebase.js';
-
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MediaProvider>
-      <App />
-    </MediaProvider>
+    <ErrorBoundary>
+      <MediaProvider>
+        <App />
+      </MediaProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
+
 
