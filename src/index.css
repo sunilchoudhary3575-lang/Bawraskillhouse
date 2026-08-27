@@ -844,3 +844,52 @@ a {
     text-align: center;
   }
 }
+
+/* ================= MOBILE RESPONSIVE OPTIMIZATION FOR ADMIN & STUDENT MANAGEMENT ================= */
+@media (max-width: 768px) {
+  .admin-main-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: center;
+    gap: 1rem !important;
+  }
+
+  .student-nav-top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .student-subtab-group {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .student-subtab-group button {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem !important;
+  }
+
+  .fee-summary-cards {
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem !important;
+  }
+
+  .receipt-page-container {
+    transform: scale(0.92);
+    transform-origin: top center;
+    max-width: 100% !important;
+  }
+
+  .printable-money-receipt {
+    overflow-x: auto !important;
+    padding-bottom: 1rem;
+  }
+}
