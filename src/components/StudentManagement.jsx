@@ -190,7 +190,7 @@ export const StudentManagement = () => {
     const updated = [newStudent, ...students.filter(s => s.id !== newStudent.id)];
     setStudents(updated);
     setSelectedStudent(newStudent);
-    setActiveSubTab('view_form');
+    setActiveSubTab('list');
     alert(`Student "${newStudent.fullName}" registered successfully! Total Fee: ₹${totalFeeNum.toLocaleString()}`);
   };
 
