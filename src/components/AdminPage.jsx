@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useMedia } from '../context/MediaContext';
-import { db, storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {
+  subscribeAdminOptions,
+  saveAdminOptionToFirebase,
+  deleteAdminOptionFromFirebase,
+  uploadFileToFirebaseStorage
+} from '../services/firebaseAdminService';
 import StudentManagement from './StudentManagement';
 
 export const AdminPage = () => {
@@ -15,7 +18,7 @@ export const AdminPage = () => {
   // Top Section Switcher ('students' or 'options')
   const [mainAdminSection, setMainAdminSection] = useState('students');
   
-  // Custom Dynamic Items State (Starts completely empty)
+  // Custom Dynamic Items State
   const [customItems, setCustomItems] = useState(() => {
     const saved = localStorage.getItem('bawra_custom_admin_options');
     return saved ? JSON.parse(saved) : [];
@@ -33,6 +36,19 @@ export const AdminPage = () => {
     type: 'image',
     value: ''
   });
+
+  // Subscribe to real-time custom options from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeAdminOptions((remoteOptions) => {
+      if (remoteOptions && remoteOptions.length > 0) {
+        setCustomItems(remoteOptions);
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
   // Sync editValues with items
   useEffect(() => {
@@ -93,7 +109,7 @@ export const AdminPage = () => {
     }
 
     try {
-      await addDoc(collection(db, 'adminCustomOptions'), itemToAdd);
+      await saveAdminOptionToFirebase(itemToAdd);
     } catch (err) {
       console.warn('Firestore optional save notice:', err);
     }
@@ -104,10 +120,15 @@ export const AdminPage = () => {
   };
 
   // Delete Custom Option
-  const handleDeleteOption = (key, label) => {
+  const handleDeleteOption = async (key, label) => {
     if (window.confirm(`Are you sure you want to delete "${label}"?`)) {
       const updated = customItems.filter(item => item.key !== key);
       setCustomItems(updated);
+      try {
+        await deleteAdminOptionFromFirebase(key);
+      } catch (err) {
+        console.warn('Firestore delete option notice:', err);
+      }
       alert(`Deleted option "${label}"`);
     }
   };
@@ -120,6 +141,10 @@ export const AdminPage = () => {
       await updateMedia(key, newVal);
       const updated = customItems.map(i => i.key === key ? { ...i, value: newVal } : i);
       setCustomItems(updated);
+
+      if (item) {
+        await saveAdminOptionToFirebase({ ...item, value: newVal });
+      }
       alert(`Successfully updated value for "${item ? item.label : key}"`);
     } catch (err) {
       alert(`Update failed: ${err.message}`);
@@ -129,16 +154,27 @@ export const AdminPage = () => {
   // File Upload
   const handleFileUpload = async (key, file) => {
     try {
-      const storageRef = ref(storage, `custom_admin/${key}_${Date.now()}_${file.name}`);
-      const uploadResult = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(uploadResult.ref);
+      let downloadURL = '';
+      try {
+        downloadURL = await uploadFileToFirebaseStorage(file, 'custom_admin');
+      } catch (uploadErr) {
+        console.warn('Firebase Storage upload notice (using MediaContext update):', uploadErr);
+        downloadURL = await updateMedia(key, file);
+      }
 
-      await updateMedia(key, downloadURL);
-      setEditValues(prev => ({ ...prev, [key]: downloadURL }));
-      
-      const updated = customItems.map(i => i.key === key ? { ...i, value: downloadURL } : i);
-      setCustomItems(updated);
-      alert(`File uploaded successfully for "${key}"`);
+      if (downloadURL) {
+        await updateMedia(key, downloadURL);
+        setEditValues(prev => ({ ...prev, [key]: downloadURL }));
+        
+        const item = customItems.find(i => i.key === key);
+        if (item) {
+          await saveAdminOptionToFirebase({ ...item, value: downloadURL });
+        }
+        
+        const updated = customItems.map(i => i.key === key ? { ...i, value: downloadURL } : i);
+        setCustomItems(updated);
+        alert(`File uploaded successfully for "${key}"`);
+      }
     } catch (err) {
       console.error('File upload error:', err);
       alert(`Upload failed: ${err.message}`);

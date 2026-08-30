@@ -6,13 +6,12 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 
 // Firebase configuration using Vite environment variables with hardcoded fallbacks
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBZNr-fATrEXpkHA8lNkFPoZOkzpUh1zz0",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "bawraskillhouse.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "bawraskillhouse",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gs://bawraskillhouse-media",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "111375002726",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:111375002726:web:dc2d36f607ad27286111a7",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-Z3D1WXD0G3"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCFjBBQOC8Le7ibVWTIClJHAvNJ2miM8VY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "adminskillhouse.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "adminskillhouse",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "adminskillhouse.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "350121677493",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:350121677493:web:324a8e9ef1b89b1659a4fc"
 };
 
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { subscribeSiteMedia, updateSiteMediaInFirebase, uploadFileToFirebaseStorage } from '../services/firebaseAdminService';
 
 // Static default asset imports
 import heroWorkspaceDefault from '../assets/hero_workspace.png';
@@ -171,6 +172,17 @@ export const MediaProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    // 1. Subscribe to Firestore real-time media updates
+    const unsubscribe = subscribeSiteMedia((firestoreMedia) => {
+      if (firestoreMedia && typeof firestoreMedia === 'object') {
+        setMedia(prev => ({
+          ...prev,
+          ...firestoreMedia
+        }));
+      }
+    });
+
+    // 2. Load local IndexedDB fallbacks if any
     const loadIndexedDBMedia = async () => {
       const updatedMedia = { ...media };
       let changed = false;
@@ -193,35 +205,60 @@ export const MediaProvider = ({ children }) => {
       }
     };
     loadIndexedDBMedia();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const updateMedia = async (key, value) => {
     if (value instanceof File || value instanceof Blob) {
       try {
-        await saveToDB(key, value);
-        const objectUrl = URL.createObjectURL(value);
-        setItemSafe(`bawra_media_${key}`, 'indexeddb_blob');
+        let finalUrl = '';
+        try {
+          // Attempt Firebase Storage Upload first for real cloud storage
+          finalUrl = await uploadFileToFirebaseStorage(value, 'site_media');
+        } catch (storageErr) {
+          console.warn('Firebase Storage upload notice (using IndexedDB fallback):', storageErr);
+          await saveToDB(key, value);
+          finalUrl = URL.createObjectURL(value);
+          setItemSafe(`bawra_media_${key}`, 'indexeddb_blob');
+        }
+
+        if (finalUrl && finalUrl.startsWith('http')) {
+          await updateSiteMediaInFirebase(key, finalUrl);
+        }
+
         setMedia(prev => ({
           ...prev,
-          [key]: objectUrl,
+          [key]: finalUrl,
         }));
-        return objectUrl;
+        return finalUrl;
       } catch (err) {
-        console.error("Failed to save media to IndexedDB:", err);
+        console.error("Failed to save media:", err);
         throw err;
       }
     } else if (typeof value === 'string' && value.trim() !== '') {
-      setItemSafe(`bawra_media_${key}`, value.trim());
+      const cleanVal = value.trim();
+      setItemSafe(`bawra_media_${key}`, cleanVal);
+      try {
+        await updateSiteMediaInFirebase(key, cleanVal);
+      } catch (err) {
+        console.warn('Firestore site media update notice:', err);
+      }
       try {
         await deleteFromDB(key);
       } catch (err) {}
       setMedia(prev => ({
         ...prev,
-        [key]: value.trim(),
+        [key]: cleanVal,
       }));
-      return value.trim();
+      return cleanVal;
     } else {
       removeItemSafe(`bawra_media_${key}`);
+      try {
+        await updateSiteMediaInFirebase(key, '');
+      } catch (err) {}
       try {
         await deleteFromDB(key);
       } catch (err) {}

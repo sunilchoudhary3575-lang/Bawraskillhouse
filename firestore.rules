@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Registered Students Collection
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+    
+    // 2. Website Lead Popups Collection
+    match /enrollments/{enrollmentId} {
+      allow read, write: if true;
+    }
+    
+    // 3. Website Consultation & Enquiry Form Collection
+    match /enquiries/{enquiryId} {
+      allow read, write: if true;
+    }
+    
+    // 4. Admin Custom Dynamic Options Collection
+    match /adminCustomOptions/{optionId} {
+      allow read, write: if true;
+    }
+    
+    // 5. Site Settings & Dynamic Media Collection
+    match /siteSettings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}
