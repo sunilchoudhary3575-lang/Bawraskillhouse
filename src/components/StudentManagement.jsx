@@ -5,10 +5,7 @@ import {
   addStudentToFirebase,
   updateStudentInFirebase,
   deleteStudentFromFirebase,
-  addPaymentInstallmentToFirebase,
-  subscribeLeads,
-  updateLeadStatusInFirebase,
-  deleteLeadFromFirebase
+  addPaymentInstallmentToFirebase
 } from '../services/firebaseAdminService';
 
 // Course Prices matching exact website pricing
@@ -34,14 +31,12 @@ export const generateRegistrationId = (currentStudentsList = []) => {
 };
 
 export const StudentManagement = () => {
-  const [activeSubTab, setActiveSubTab] = useState('list'); // 'list', 'new', 'view_form', 'view_student', 'leads'
+  const [activeSubTab, setActiveSubTab] = useState('list'); // 'list', 'new', 'view_form', 'view_student'
   const [students, setStudents] = useState(() => {
     const saved = localStorage.getItem('bawra_registered_students');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [leads, setLeads] = useState([]);
-  const [leadFilter, setLeadFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const printRef = useRef(null);
@@ -84,19 +79,14 @@ export const StudentManagement = () => {
     localStorage.setItem('bawra_registered_students', JSON.stringify(students));
   }, [students]);
 
-  // Subscribe to Firestore Real-Time Updates for Students & Leads
+  // Subscribe to Firestore Real-Time Updates for Students
   useEffect(() => {
     const unsubStudents = subscribeStudents((remoteStudents) => {
       setStudents(remoteStudents);
     });
 
-    const unsubLeads = subscribeLeads((remoteLeads) => {
-      setLeads(remoteLeads);
-    });
-
     return () => {
       if (unsubStudents) unsubStudents();
-      if (unsubLeads) unsubLeads();
     };
   }, []);
 
@@ -260,27 +250,6 @@ export const StudentManagement = () => {
     }
   };
 
-  // Lead management handlers
-  const handleUpdateLeadStatus = async (collectionName, leadId, newStatus) => {
-    try {
-      await updateLeadStatusInFirebase(collectionName, leadId, newStatus);
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
-    } catch (err) {
-      alert(`Failed to update status: ${err.message}`);
-    }
-  };
-
-  const handleDeleteLead = async (collectionName, leadId, leadName) => {
-    if (window.confirm(`Delete lead request from "${leadName || 'User'}"?`)) {
-      try {
-        await deleteLeadFromFirebase(collectionName, leadId);
-        setLeads(prev => prev.filter(l => l.id !== leadId));
-      } catch (err) {
-        alert(`Failed to delete lead: ${err.message}`);
-      }
-    }
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -321,20 +290,6 @@ export const StudentManagement = () => {
             }}
           >
             📋 Student Directory ({students.length})
-          </button>
-          <button
-            onClick={() => setActiveSubTab('leads')}
-            style={{
-              padding: '0.6rem 1.2rem',
-              borderRadius: '8px',
-              border: activeSubTab === 'leads' ? 'none' : '1px solid #cbd5e1',
-              backgroundColor: activeSubTab === 'leads' ? '#2563eb' : '#ffffff',
-              color: activeSubTab === 'leads' ? '#ffffff' : '#334155',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            📩 Website Leads & Enquiries ({leads.length})
           </button>
           <button
             onClick={() => {
@@ -603,178 +558,6 @@ export const StudentManagement = () => {
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ================= WEBSITE LEADS & ENQUIRIES DASHBOARD ================= */}
-      {activeSubTab === 'leads' && (
-        <div className="no-print">
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {['All', 'New', 'Contacted', 'Enrolled'].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setLeadFilter(st)}
-                  style={{
-                    padding: '0.4rem 0.9rem',
-                    borderRadius: '20px',
-                    border: leadFilter === st ? 'none' : '1px solid #cbd5e1',
-                    backgroundColor: leadFilter === st ? '#0a0e29' : '#f8fafc',
-                    color: leadFilter === st ? '#ffffff' : '#475569',
-                    fontSize: '0.85rem',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {st} {st === 'All' ? `(${leads.length})` : `(${leads.filter(l => (l.status || 'New') === st).length})`}
-                </button>
-              ))}
-            </div>
-
-            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-              Real-time synchronization active via Firebase Firestore
-            </span>
-          </div>
-
-          {leads.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem',
-              backgroundColor: '#f8fafc',
-              borderRadius: '12px',
-              border: '2px dashed #e2e8f0'
-            }}>
-              <h3>No Website Leads Found</h3>
-              <p style={{ color: '#64748b' }}>When visitors submit Lead Popups or Consultation forms on your site, they will appear here automatically.</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ background: '#0a0e29', color: '#fff' }}>
-                    <th style={{ padding: '0.8rem 1rem' }}>Submitted Date</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Name</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Phone & Contact</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Course / Topic</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Message / Queries</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Source</th>
-                    <th style={{ padding: '0.8rem 1rem' }}>Status</th>
-                    <th style={{ padding: '0.8rem 1rem', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leads
-                    .filter(l => leadFilter === 'All' ? true : (l.status || 'New') === leadFilter)
-                    .map((ld, idx) => {
-                      const formattedDate = ld.submittedAt
-                        ? new Date(ld.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-                        : 'Recent';
-
-                      return (
-                        <tr key={ld.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                          <td style={{ padding: '0.8rem 1rem', fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>
-                            {formattedDate}
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem', fontWeight: '600', color: '#0f172a' }}>
-                            {ld.name || 'Anonymous'}
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem' }}>
-                            <div style={{ fontWeight: '600', color: '#2563eb' }}>{ld.phone}</div>
-                            {ld.email && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{ld.email}</div>}
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem', fontWeight: '500' }}>
-                            {ld.course || 'General Consultation'}
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem', fontSize: '0.85rem', color: '#334155', maxWidth: '240px' }}>
-                            {ld.message || ld.description || '-'}
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '0.2rem 0.6rem',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              backgroundColor: ld.source === 'lead_popup' ? '#fef3c7' : '#e0f2fe',
-                              color: ld.source === 'lead_popup' ? '#92400e' : '#0369a1'
-                            }}>
-                              {ld.source === 'lead_popup' ? '🔥 Lead Popup' : '📞 Consultation Form'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem' }}>
-                            <select
-                              value={ld.status || 'New'}
-                              onChange={(e) => handleUpdateLeadStatus(ld.collectionName, ld.id, e.target.value)}
-                              style={{
-                                padding: '0.3rem 0.6rem',
-                                borderRadius: '6px',
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                                border: '1px solid #cbd5e1',
-                                backgroundColor:
-                                  (ld.status || 'New') === 'New' ? '#dbeafe' :
-                                  ld.status === 'Contacted' ? '#fef3c7' :
-                                  ld.status === 'Enrolled' ? '#dcfce7' : '#f1f5f9',
-                                color:
-                                  (ld.status || 'New') === 'New' ? '#1e40af' :
-                                  ld.status === 'Contacted' ? '#92400e' :
-                                  ld.status === 'Enrolled' ? '#166534' : '#475569',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              <option value="New">🔵 New</option>
-                              <option value="Contacted">🟡 Contacted</option>
-                              <option value="Enrolled">🟢 Enrolled</option>
-                              <option value="Closed">⚪ Closed</option>
-                            </select>
-                          </td>
-                          <td style={{ padding: '0.8rem 1rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                            <a
-                              href={`https://wa.me/91${(ld.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${ld.name || ''}, greetings from Bawra Skill House!`)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                padding: '0.35rem 0.75rem',
-                                borderRadius: '20px',
-                                border: 'none',
-                                backgroundColor: '#25d366',
-                                color: '#ffffff',
-                                fontWeight: '600',
-                                textDecoration: 'none',
-                                fontSize: '0.78rem',
-                                marginRight: '0.5rem',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                            >
-                              💬 WhatsApp
-                            </a>
-                            <button
-                              onClick={() => handleDeleteLead(ld.collectionName, ld.id, ld.name)}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                border: '1px solid #fca5a5',
-                                background: '#fee2e2',
-                                color: '#ef4444',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem',
-                                padding: 0
-                              }}
-                              title="Delete Lead"
-                            >
-                              🗑️
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
                 </tbody>
               </table>
             </div>

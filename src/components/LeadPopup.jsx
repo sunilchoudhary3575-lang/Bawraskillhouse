@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
 
 export const LeadPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -40,16 +38,6 @@ export const LeadPopup = () => {
 
     setFormSubmitted(true);
     try {
-      await addDoc(collection(db, 'enrollments'), {
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email || '',
-        description: formData.description || '',
-        course: 'General Consultation',
-        submittedAt: new Date().toISOString(),
-        source: 'lead_popup'
-      });
-
       // Send to Google Sheets if URL is configured in environment variables
       const googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
       if (googleSheetUrl) {
@@ -80,7 +68,7 @@ export const LeadPopup = () => {
       setFormData({ name: '', phone: '', email: '', description: '' });
       setFormSubmitted(false);
     } catch (err) {
-      console.error('Failed to save popup lead to Firestore:', err);
+      console.error('Submission error:', err);
       setFormSubmitted(false);
       alert(`Submission failed: ${err.message}. Please try again.`);
     }

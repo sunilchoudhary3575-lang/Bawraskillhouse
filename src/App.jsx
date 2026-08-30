@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useMedia } from './context/MediaContext';
-import { db } from './firebase';
-import { collection, addDoc } from 'firebase/firestore';
 import logoImg from './assets/logo.png';
 
 // Layout & Common Components
@@ -260,19 +258,8 @@ export default function App() {
     setFormSubmitted(true);
 
     const isEnquiry = currentPage === 'contact' || consultationForm.course === 'Enquiry' || modalCourse === 'Brochure Request';
-    const targetCollection = isEnquiry ? 'enquiries' : 'enrollments';
 
     try {
-      await addDoc(collection(db, targetCollection), {
-        name: consultationForm.name,
-        phone: consultationForm.phone,
-        email: consultationForm.email || '',
-        course: consultationForm.course || 'General Consultation',
-        message: consultationForm.message || '',
-        submittedAt: new Date().toISOString(),
-        source: currentPage === 'contact' ? 'contact_page' : 'consultation_modal'
-      });
-
       // Send to Google Sheets if URL is configured in environment variables
       const googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
       console.log('Google Sheets URL from env:', googleSheetUrl);
@@ -322,7 +309,7 @@ export default function App() {
       setConsultationForm({ name: '', phone: '', email: '', course: 'General Consultation', message: '' });
       alert('Your request has been received. Our counselor will reach out to you within 2 hours!');
     } catch (err) {
-      console.error(`Failed to save to Firestore ${targetCollection}:`, err);
+      console.error(`Submission error:`, err);
       setFormSubmitted(false);
       alert(`Submission failed: ${err.message}. Please try again.`);
     }
