@@ -24,8 +24,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
  */
 export const subscribeStudents = (callback) => {
   try {
-    const q = query(collection(db, 'students'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, (snapshot) => {
+    const colRef = collection(db, 'students');
+    return onSnapshot(colRef, (snapshot) => {
       const studentsList = [];
       snapshot.forEach((docSnap) => {
         studentsList.push({
@@ -33,6 +33,8 @@ export const subscribeStudents = (callback) => {
           ...docSnap.data()
         });
       });
+      // Sort client-side by createdAt descending
+      studentsList.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       callback(studentsList);
     }, (error) => {
       console.warn('Firestore real-time students subscription warning:', error);

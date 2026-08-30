@@ -87,9 +87,7 @@ export const StudentManagement = () => {
   // Subscribe to Firestore Real-Time Updates for Students & Leads
   useEffect(() => {
     const unsubStudents = subscribeStudents((remoteStudents) => {
-      if (remoteStudents && remoteStudents.length > 0) {
-        setStudents(remoteStudents);
-      }
+      setStudents(remoteStudents);
     });
 
     const unsubLeads = subscribeLeads((remoteLeads) => {
