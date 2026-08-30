@@ -182,8 +182,10 @@ export const StudentManagement = () => {
     try {
       const docId = await addStudentToFirebase(newStudent);
       newStudent.id = docId;
+      console.log('✅ Firestore student write successful! Doc ID:', docId);
     } catch (err) {
-      console.warn('Firestore student save notice (saved locally):', err);
+      console.error('❌ Firestore student save failed:', err);
+      alert(`⚠️ Firestore Sync Warning: ${err.message}\n(Student saved in local browser storage)`);
       newStudent.id = `std_${Date.now()}`;
     }
 
