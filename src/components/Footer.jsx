@@ -1,53 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Logo from './Logo';
 
 export const Footer = ({ navigateTo }) => {
-  const [showSeoDirectory, setShowSeoDirectory] = useState(false);
-
-  const seoKeywordCategories = [
-    {
-      category: "Digital Marketing & Strategy",
-      keywords: [
-        "Digital Marketing Agency", "Digital Marketing Services", "Performance Marketing", "Digital Marketing Strategy",
-        "Digital Advertising Agency", "Digital Marketing Business", "Growth Marketing Agency", "Inbound Marketing Agency",
-        "Digital Marketing Consultation", "Digital Branding Services", "Full Stack Marketing Agency", "Digital Media Agency",
-        "ROI Driven Digital Marketing", "Digital Marketing Plan", "Online Marketing Agency", "Digital Marketing Leads"
-      ]
-    },
-    {
-      category: "Social Media Marketing & Ads",
-      keywords: [
-        "Social Media Marketing", "Social Media Agency", "Social Media Advertising Services", "Social Media Campaign",
-        "Social Media Branding", "Social Media Ad Agency", "Social Media Content Strategy", "Paid Social Media Marketing",
-        "Social Media Lead Generation", "Social Media Growth Marketing", "Social Media Agency Services", "Social Media Marketing Strategy"
-      ]
-    },
-    {
-      category: "Performance Marketing & Lead Generation",
-      keywords: [
-        "Performance Marketing Agency", "Lead Generation Agency", "Performance Advertising", "Paid Media Marketing Agency",
-        "Inbound Lead Generation", "Demand Generation Agency", "Performance Branding Agency", "Conversion Digital Marketing",
-        "Lead Generation Digital Marketing", "Performance Media Agency", "B2B Lead Generation"
-      ]
-    },
-    {
-      category: "Branding, Content & Advertising",
-      keywords: [
-        "Branding and Marketing Agency", "Brand Strategy Agency", "Content Marketing Agency", "Content Creation Digital Marketing",
-        "Brand Performance Marketing", "Creative Digital Marketing Agency", "Digital Ad Strategy", "Brand Advertising Agency",
-        "Digital Content Strategy", "Digital Brand Management", "Multimedia Marketing Agency"
-      ]
-    },
-    {
-      category: "Local & Regional SEO (Jodhpur, Rajasthan, India)",
-      keywords: [
-        "Digital Marketing Agency in Jodhpur", "Social Media Marketing Jodhpur", "Digital Marketing Agency India",
-        "Performance Marketing Agency in India", "Branding Agency India", "Digital Marketing Rajasthan",
-        "Advertising Agency in Jodhpur", "Digital Marketing Agency Near Me", "Local Business Social Media Marketing"
-      ]
-    }
-  ];
-
   return (
     <footer className="footer-section">
       <div className="container footer-grid">
@@ -56,7 +10,7 @@ export const Footer = ({ navigateTo }) => {
             <Logo />
           </a>
           <p className="footer-tagline">
-            Premier Digital Marketing & Skill Academy in Jodhpur, Rajasthan. Helping businesses scale with ROI-driven digital marketing, performance ads, social media strategies, and industry-focused professional training.
+            Premium academy designed for visual designers, film editors, and creators aiming for elite client placements and global freelancing careers.
           </p>
         </div>
         
@@ -93,42 +47,14 @@ export const Footer = ({ navigateTo }) => {
               rel="noopener noreferrer"
               style={{ textDecoration: 'underline' }}
             >
-              Jodhpur, Rajasthan, India
+              Jodhpur, Rajasthan
             </a>
           </p>
         </div>
       </div>
 
-      {/* SEO Keywords Directory Section */}
-      <div className="container footer-seo-container">
-        <div className="seo-toggle-header" onClick={() => setShowSeoDirectory(!showSeoDirectory)}>
-          <h3>Popular Digital Marketing, Social Media & SEO Topics</h3>
-          <button className="seo-toggle-btn" aria-label="Toggle SEO Directory">
-            {showSeoDirectory ? '▲ Hide Topics' : '▼ Explore All Topics'}
-          </button>
-        </div>
-
-        <div className={`seo-directory-content ${showSeoDirectory ? 'open' : ''}`}>
-          <p className="seo-directory-intro">
-            Explore top search topics and digital marketing solutions offered by Bawra Skill House & Bawra Digitals across Jodhpur, Rajasthan, and India.
-          </p>
-          <div className="seo-categories-grid">
-            {seoKeywordCategories.map((cat, idx) => (
-              <div key={idx} className="seo-category-card">
-                <h4>{cat.category}</h4>
-                <div className="seo-tags-wrap">
-                  {cat.keywords.map((kw, i) => (
-                    <span key={i} className="seo-tag">{kw}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <div className="container footer-bottom">
-        <p>© {new Date().getFullYear()} Bawra Skill House. All rights reserved. Top Digital Marketing & Creative Academy in Jodhpur.</p>
+        <p>© {new Date().getFullYear()} Bawra Skill House. All rights reserved. Designed to Awwwards premium design guidelines.</p>
         <div className="footer-social-row">
           <a href="#" aria-label="Behance">Behance</a>
           <a href="#" aria-label="YouTube">YouTube</a>
