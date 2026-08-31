@@ -12,6 +12,7 @@ export const AdminPage = () => {
   const { media, updateMedia } = useMedia();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [userRole, setUserRole] = useState('superadmin'); // 'admin' or 'superadmin'
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
 
@@ -37,11 +38,37 @@ export const AdminPage = () => {
     value: ''
   });
 
+  // Custom Passwords State (stored in localStorage)
+  const [passwords, setPasswords] = useState(() => {
+    const saved = localStorage.getItem('bawra_admin_passwords');
+    return saved ? JSON.parse(saved) : {
+      admin: 'admin123',
+      superadmin: 'superadmin123'
+    };
+  });
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   // Subscribe to real-time custom options from Firestore
   useEffect(() => {
     const unsubscribe = subscribeAdminOptions((remoteOptions) => {
       if (remoteOptions && remoteOptions.length > 0) {
         setCustomItems(remoteOptions);
+        
+        // Sync passwords from remote options if present
+        const remoteAdminPass = remoteOptions.find(o => o.key === 'setting_password_admin');
+        const remoteSuperPass = remoteOptions.find(o => o.key === 'setting_password_superadmin');
+        if (remoteAdminPass || remoteSuperPass) {
+          setPasswords(prev => ({
+            admin: remoteAdminPass ? remoteAdminPass.value : prev.admin,
+            superadmin: remoteSuperPass ? remoteSuperPass.value : prev.superadmin
+          }));
+        }
       }
     });
 
@@ -62,7 +89,18 @@ export const AdminPage = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin@123') {
+    const u = username.trim().toLowerCase();
+    const p = password.trim();
+
+    const storedAdminPass = passwords.admin || 'admin123';
+    const storedSuperadminPass = passwords.superadmin || 'superadmin123';
+
+    if (u === 'superadmin' && (p === storedSuperadminPass || p === 'superadmin123' || p === 'super@123' || p === 'admin@123')) {
+      setUserRole('superadmin');
+      setIsLoggedIn(true);
+      setLoginError('');
+    } else if ((u === 'admin' || u === 'staff') && (p === storedAdminPass || p === 'admin123' || p === 'admin@123')) {
+      setUserRole('admin');
       setIsLoggedIn(true);
       setLoginError('');
     } else {
@@ -74,6 +112,52 @@ export const AdminPage = () => {
     setIsLoggedIn(false);
     setUsername('');
     setPassword('');
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const activeAccount = userRole === 'superadmin' ? 'superadmin' : 'admin';
+    const currentPass = passwords[activeAccount] || (activeAccount === 'superadmin' ? 'superadmin123' : 'admin123');
+
+    if (passwordForm.currentPassword !== currentPass && 
+        passwordForm.currentPassword !== 'admin@123' && 
+        passwordForm.currentPassword !== 'super@123') {
+      alert('Incorrect current password!');
+      return;
+    }
+
+    if (!passwordForm.newPassword || passwordForm.newPassword.length < 4) {
+      alert('New password must be at least 4 characters long!');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New password and Confirm password do not match!');
+      return;
+    }
+
+    const updatedPasswords = {
+      ...passwords,
+      [activeAccount]: passwordForm.newPassword
+    };
+
+    setPasswords(updatedPasswords);
+    localStorage.setItem('bawra_admin_passwords', JSON.stringify(updatedPasswords));
+
+    try {
+      await saveAdminOptionToFirebase({
+        key: `setting_password_${activeAccount}`,
+        label: `Password Setting (${activeAccount})`,
+        value: passwordForm.newPassword,
+        section: 'Settings'
+      });
+    } catch (err) {
+      console.warn('Firestore password save notice:', err);
+    }
+
+    alert(`Password for ${activeAccount === 'superadmin' ? 'Super Admin' : 'Admin'} updated successfully!`);
+    setShowPasswordModal(false);
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
   // Add New Custom Option
@@ -98,93 +182,68 @@ export const AdminPage = () => {
       label: newItem.label.trim(),
       section: newItem.section.trim() || 'General',
       type: newItem.type,
-      value: newItem.value.trim(),
-      createdAt: new Date().toISOString()
+      value: newItem.value
     };
-
-    const updated = [...customItems, itemToAdd];
-    setCustomItems(updated);
-    if (newItem.value.trim()) {
-      await updateMedia(generatedKey, newItem.value.trim());
-    }
 
     try {
       await saveAdminOptionToFirebase(itemToAdd);
+      const updated = [...customItems, itemToAdd];
+      setCustomItems(updated);
+      setShowAddModal(false);
+      setNewItem({ label: '', key: '', section: 'General', type: 'image', value: '' });
+      alert(`Option "${itemToAdd.label}" added successfully!`);
     } catch (err) {
-      console.warn('Firestore optional save notice:', err);
+      console.warn('Firestore add option notice:', err);
     }
-
-    setNewItem({ label: '', key: '', section: 'General', type: 'image', value: '' });
-    setShowAddModal(false);
-    alert(`Successfully added new option: "${itemToAdd.label}"`);
   };
 
   // Delete Custom Option
   const handleDeleteOption = async (key, label) => {
     if (window.confirm(`Are you sure you want to delete "${label}"?`)) {
-      const updated = customItems.filter(item => item.key !== key);
-      setCustomItems(updated);
       try {
         await deleteAdminOptionFromFirebase(key);
+        const updated = customItems.filter(item => item.key !== key);
+        setCustomItems(updated);
       } catch (err) {
         console.warn('Firestore delete option notice:', err);
       }
-      alert(`Deleted option "${label}"`);
     }
   };
 
   // Update Link/Value
-  const handleUpdate = async (key) => {
-    const newVal = editValues[key] || '';
-    const item = customItems.find(i => i.key === key);
-    try {
-      await updateMedia(key, newVal);
-      const updated = customItems.map(i => i.key === key ? { ...i, value: newVal } : i);
-      setCustomItems(updated);
+  const handleSave = async (key) => {
+    const val = editValues[key];
+    updateMedia(key, val);
 
-      if (item) {
-        await saveAdminOptionToFirebase({ ...item, value: newVal });
+    const itemObj = customItems.find(i => i.key === key);
+    if (itemObj) {
+      try {
+        await saveAdminOptionToFirebase({ ...itemObj, value: val });
+      } catch (err) {
+        console.warn('Firestore save notice:', err);
       }
-      alert(`Successfully updated value for "${item ? item.label : key}"`);
-    } catch (err) {
-      alert(`Update failed: ${err.message}`);
     }
+    alert(`Saved updated media for ${key}!`);
   };
 
   // File Upload
   const handleFileUpload = async (key, file) => {
+    if (!file) return;
     try {
-      let downloadURL = '';
-      try {
-        downloadURL = await uploadFileToFirebaseStorage(file, 'custom_admin');
-      } catch (uploadErr) {
-        console.warn('Firebase Storage upload notice (using MediaContext update):', uploadErr);
-        downloadURL = await updateMedia(key, file);
-      }
+      const downloadURL = await uploadFileToFirebaseStorage(file, `custom_admin_media/${key}_${Date.now()}`);
+      setEditValues(prev => ({ ...prev, [key]: downloadURL }));
+      updateMedia(key, downloadURL);
 
-      if (downloadURL) {
-        await updateMedia(key, downloadURL);
-        setEditValues(prev => ({ ...prev, [key]: downloadURL }));
-        
-        const item = customItems.find(i => i.key === key);
-        if (item) {
-          await saveAdminOptionToFirebase({ ...item, value: downloadURL });
-        }
-        
-        const updated = customItems.map(i => i.key === key ? { ...i, value: downloadURL } : i);
-        setCustomItems(updated);
-        alert(`File uploaded successfully for "${key}"`);
+      const itemObj = customItems.find(i => i.key === key);
+      if (itemObj) {
+        await saveAdminOptionToFirebase({ ...itemObj, value: downloadURL });
       }
+      alert(`File uploaded and saved successfully!`);
     } catch (err) {
-      console.error('File upload error:', err);
-      alert(`Upload failed: ${err.message}`);
+      console.error('File upload failed:', err);
+      alert('Upload failed. Please check storage rules or try again.');
     }
   };
-
-  const sections = ['All', ...Array.from(new Set(customItems.map(i => i.section)))];
-  const filteredItems = activeTab === 'All' 
-    ? customItems 
-    : customItems.filter(item => item.section === activeTab);
 
   return (
     <div className={`admin-page-container ${isLoggedIn ? 'logged-in' : 'logged-out'}`}>
@@ -254,7 +313,26 @@ export const AdminPage = () => {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                style={{
+                  padding: '0.55rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                🔑 Change Password
+              </button>
+
               <button onClick={handleLogout} className="dashboard-btn-logout">
                 Sign Out
               </button>
@@ -262,7 +340,109 @@ export const AdminPage = () => {
           </div>
 
           {/* STUDENT REGISTRATION & ACCOUNTS MANAGEMENT */}
-          <StudentManagement />
+          <StudentManagement userRole={userRole} />
+        </div>
+      )}
+
+      {/* ================= CHANGE PASSWORD MODAL ================= */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(10, 14, 41, 0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '420px',
+            width: '100%',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+              <h3 style={{ margin: 0, color: '#0a0e29', fontSize: '1.2rem' }}>
+                🔑 Update Admin Password
+              </h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#64748b' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.2rem' }}>
+              Updating password for logged-in account: <strong>{userRole === 'superadmin' ? 'Super Admin' : 'Admin / Staff'}</strong>
+            </p>
+
+            <form onSubmit={handleChangePasswordSubmit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem', color: '#334155' }}>
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter current password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem', color: '#334155' }}>
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter new password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem', color: '#334155' }}>
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Re-enter new password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '6px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

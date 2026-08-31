@@ -484,7 +484,7 @@ export default function App() {
       </React.Suspense>
 
       {/* Floating Scroll-triggered Lead Ad Popup */}
-      <LeadPopup />
+      {currentPage !== 'admin' && <LeadPopup currentPage={currentPage} />}
 
     </div>
   );

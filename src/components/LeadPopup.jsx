@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export const LeadPopup = () => {
+export const LeadPopup = ({ currentPage }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -12,7 +12,7 @@ export const LeadPopup = () => {
   });
 
   useEffect(() => {
-    if (isDismissed || formSubmitted) return;
+    if (isDismissed || formSubmitted || currentPage === 'admin') return;
 
     const handleScroll = () => {
       if (window.scrollY > 200) {
@@ -22,7 +22,7 @@ export const LeadPopup = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isDismissed, formSubmitted]);
+  }, [isDismissed, formSubmitted, currentPage]);
 
   const handleDismiss = () => {
     setIsVisible(false);
@@ -74,7 +74,7 @@ export const LeadPopup = () => {
     }
   };
 
-  if (!isVisible || isDismissed) return null;
+  if (!isVisible || isDismissed || currentPage === 'admin') return null;
 
   return (
     <div className="popup-overlay" onClick={handleDismiss}>
