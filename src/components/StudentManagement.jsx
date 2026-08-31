@@ -98,6 +98,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   const [accountsCustomStartDate, setAccountsCustomStartDate] = useState('');
   const [accountsCustomEndDate, setAccountsCustomEndDate] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editingStudentId, setEditingStudentId] = useState(null);
   const printRef = useRef(null);
 
   // New Registration Form Data
@@ -224,6 +225,42 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     }));
   };
 
+  const handleEditStudent = (std) => {
+    if (!std) return;
+    setEditingStudentId(std.id);
+    setSelectedStudent(std);
+    setFormData({
+      fullName: std.fullName || '',
+      guardianName: std.guardianName || '',
+      dob: std.dob || '',
+      gender: std.gender || 'Male',
+      mobile: std.mobile || '',
+      fatherMobile: std.fatherMobile || std.whatsapp || '',
+      email: std.email || '',
+      address: std.address || '',
+      city: std.city || '',
+      courses: Array.isArray(std.courses) ? std.courses : (std.courses ? [std.courses] : ['Graphic Designing']),
+      decTrueInfo: std.decTrueInfo !== undefined ? std.decTrueInfo : true,
+      decFeeTerms: std.decFeeTerms !== undefined ? std.decFeeTerms : true,
+      decFollowRules: std.decFollowRules !== undefined ? std.decFollowRules : true,
+      signature: std.signature || '',
+      signatureDate: std.signatureDate || new Date().toISOString().split('T')[0],
+      registrationId: std.registrationId || '',
+      batchAssigned: std.batchAssigned || 'Morning Batch (10 AM - 1 PM)',
+      batchStartDate: std.batchStartDate || new Date().toISOString().split('T')[0],
+      batchEndDate: std.batchEndDate || '',
+      admissionConfirmed: std.admissionConfirmed || 'Yes',
+      totalFee: std.totalFee !== undefined ? std.totalFee : 20000,
+      discountAmount: std.discountAmount || 0,
+      paidAmount: std.paidAmount || 0,
+      paymentMode: std.paymentMode || 'Cash',
+      receivedBy: std.receivedBy || 'Bawra Skill House',
+      paymentNotes: std.paymentNotes || '',
+      adminInternalNotes: std.adminInternalNotes || ''
+    });
+    setActiveSubTab('new');
+  };
+
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!formData.fullName.trim()) {
@@ -242,6 +279,39 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const paidNum = parseFloat(formData.paidAmount) || 0;
     const pendingBalance = finalFee - paidNum;
 
+    if (editingStudentId) {
+      // EDIT EXISTING STUDENT MODE
+      const existingStudent = students.find(s => s.id === editingStudentId) || {};
+      const updatedStudent = {
+        ...existingStudent,
+        ...formData,
+        totalFee: totalFeeNum,
+        discountAmount: discountNum,
+        finalFee: finalFee,
+        paidAmount: paidNum,
+        pendingBalance: pendingBalance,
+        adminInternalNotes: formData.adminInternalNotes || '',
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        await updateStudentInFirebase(editingStudentId, updatedStudent);
+        console.log('✅ Firestore student update successful for ID:', editingStudentId);
+      } catch (err) {
+        console.error('❌ Firestore student update failed:', err);
+        alert(`⚠️ Firestore Sync Warning: ${err.message}\n(Student updated in local browser storage)`);
+      }
+
+      const updatedList = students.map(s => s.id === editingStudentId ? updatedStudent : s);
+      setStudents(updatedList);
+      setSelectedStudent(updatedStudent);
+      setEditingStudentId(null);
+      setActiveSubTab('view_form');
+      alert(`✅ Student "${updatedStudent.fullName}" registration details updated successfully!`);
+      return;
+    }
+
+    // CREATE NEW STUDENT MODE
     const newStudent = {
       ...formData,
       totalFee: totalFeeNum,
@@ -577,6 +647,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
           </button>
           <button
             onClick={() => {
+              setEditingStudentId(null);
               setFormData(getInitialFormState(students));
               setActiveSubTab('new');
             }}
@@ -615,6 +686,21 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', marginRight: '0.2rem' }}>
               Selected: <strong style={{ color: '#0a0e29' }}>{selectedStudent.fullName}</strong>
             </span>
+            <button
+              onClick={() => handleEditStudent(selectedStudent)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                border: '1px solid #d97706',
+                background: '#fef3c7',
+                color: '#b45309',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+              title="Edit registration details for selected student"
+            >
+              ✏️ Edit Form
+            </button>
             <button
               onClick={() => setActiveSubTab('view_form')}
               style={{
@@ -789,7 +875,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                     <th style={{ padding: '0.8rem 1rem' }}>Paid</th>
                     <th style={{ padding: '0.8rem 1rem' }}>Pending</th>
                     <th style={{ padding: '0.8rem 1rem' }}>Status</th>
-                    <th style={{ padding: '0.8rem 1rem', textAlign: 'center', width: '80px' }}>Action</th>
+                    <th style={{ padding: '0.8rem 1rem', textAlign: 'center', width: '100px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -855,29 +941,54 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                           </span>
                         </td>
                         <td style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteStudent(std.id, std.fullName);
-                            }}
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              border: '1px solid #fca5a5',
-                              background: '#fee2e2',
-                              color: '#ef4444',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: 0
-                            }}
-                            title="Delete Student"
-                          >
-                            🗑️
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditStudent(std);
+                              }}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                border: '1px solid #fde68a',
+                                background: '#fef3c7',
+                                color: '#d97706',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                              }}
+                              title="Edit Registration Details"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteStudent(std.id, std.fullName);
+                              }}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                border: '1px solid #fca5a5',
+                                background: '#fee2e2',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                              }}
+                              title="Delete Student"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -889,11 +1000,49 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
         </div>
       )}
 
-      {/* ================= 2. NEW REGISTRATION FORM INPUT ================= */}
+      {/* ================= 2. NEW / EDIT REGISTRATION FORM INPUT ================= */}
       {activeSubTab === 'new' && (
         <div className="no-print" style={{ background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+          {editingStudentId && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: '#fef3c7',
+              border: '1px solid #fde68a',
+              padding: '0.75rem 1.2rem',
+              borderRadius: '8px',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e', fontWeight: 'bold' }}>
+                <span style={{ fontSize: '1.2rem' }}>✏️</span>
+                <span>Editing Registration Details for: <strong>{formData.fullName}</strong> ({formData.registrationId})</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingStudentId(null);
+                  setFormData(getInitialFormState(students));
+                  setActiveSubTab('list');
+                }}
+                style={{
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '0.82rem'
+                }}
+              >
+                ❌ Cancel Editing
+              </button>
+            </div>
+          )}
+
           <h2 style={{ marginBottom: '1.5rem', borderBottom: '2px solid #0a0e29', paddingBottom: '0.5rem', color: '#0a0e29' }}>
-            📝 Fill Student Registration Details
+            {editingStudentId ? `✏️ Edit Student Registration Details (${formData.registrationId})` : '📝 Fill Student Registration Details'}
           </h2>
 
           <form onSubmit={handleRegisterSubmit}>
@@ -1264,16 +1413,17 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
               style={{
                 width: '100%',
                 padding: '0.9rem',
-                backgroundColor: '#0a0e29',
+                backgroundColor: editingStudentId ? '#d97706' : '#0a0e29',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
                 fontSize: '1rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                boxShadow: editingStudentId ? '0 4px 12px rgba(217, 119, 6, 0.3)' : 'none'
               }}
             >
-              ✨ Generate Official Registration Form
+              {editingStudentId ? '💾 Save & Update Student Details' : '✨ Generate Official Registration Form'}
             </button>
           </form>
         </div>
@@ -1529,6 +1679,58 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       {/* ================= 4. GENERATED REGISTRATION FORM (PRINTABLE) ================= */}
       {activeSubTab === 'view_form' && selectedStudent && (
         <div>
+          <div className="no-print" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            maxWidth: '800px',
+            margin: '0 auto 1.2rem auto',
+            background: '#ffffff',
+            padding: '0.8rem 1.2rem',
+            borderRadius: '10px',
+            border: '1px solid #cbd5e1',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>📋</span>
+              <div>
+                <strong style={{ color: '#0a0e29', fontSize: '0.95rem' }}>{selectedStudent.fullName}</strong>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem' }}>({selectedStudent.registrationId})</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <button
+                onClick={() => handleEditStudent(selectedStudent)}
+                style={{
+                  backgroundColor: '#f59e0b',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                ✏️ Edit Registration Details
+              </button>
+              <button
+                onClick={handlePrint}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                🖨️ Print Form / Save PDF
+              </button>
+            </div>
+          </div>
           <div className="printable-registration-form" ref={printRef}>
             <style>{`
               @page {
@@ -1938,20 +2140,36 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 {selectedStudent.batchEndDate && <span>• End: <strong style={{ color: '#e11d48' }}>{selectedStudent.batchEndDate}</strong></span>}
               </div>
             </div>
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              style={{
-                backgroundColor: '#10b981',
-                color: '#fff',
-                border: 'none',
-                padding: '0.6rem 1.2rem',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
-            >
-              💵 Record New Fee Payment
-            </button>
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+              <button
+                onClick={() => handleEditStudent(selectedStudent)}
+                style={{
+                  backgroundColor: '#f59e0b',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                ✏️ Edit Form
+              </button>
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                💵 Record New Fee Payment
+              </button>
+            </div>
           </div>
 
           {/* Fee Summary Cards */}
