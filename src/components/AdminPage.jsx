@@ -12,8 +12,25 @@ export const AdminPage = () => {
   const { media, updateMedia } = useMedia();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [userRole, setUserRole] = useState('superadmin'); // 'admin' or 'superadmin'
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Persistent Session State (remains logged in across page reloads)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      const savedSession = localStorage.getItem('bawra_admin_session');
+      return savedSession ? JSON.parse(savedSession).isLoggedIn : false;
+    } catch {
+      return false;
+    }
+  });
+
+  const [userRole, setUserRole] = useState(() => {
+    try {
+      const savedSession = localStorage.getItem('bawra_admin_session');
+      return savedSession ? JSON.parse(savedSession).userRole : 'superadmin';
+    } catch {
+      return 'superadmin';
+    }
+  });
+
   const [loginError, setLoginError] = useState('');
 
   // Top Section Switcher ('students' or 'options')
@@ -99,10 +116,12 @@ export const AdminPage = () => {
       setUserRole('superadmin');
       setIsLoggedIn(true);
       setLoginError('');
+      localStorage.setItem('bawra_admin_session', JSON.stringify({ isLoggedIn: true, userRole: 'superadmin' }));
     } else if ((u === 'admin' || u === 'staff') && (p === storedAdminPass || p === 'admin123' || p === 'admin@123')) {
       setUserRole('admin');
       setIsLoggedIn(true);
       setLoginError('');
+      localStorage.setItem('bawra_admin_session', JSON.stringify({ isLoggedIn: true, userRole: 'admin' }));
     } else {
       setLoginError('Invalid admin username or password!');
     }
@@ -112,6 +131,7 @@ export const AdminPage = () => {
     setIsLoggedIn(false);
     setUsername('');
     setPassword('');
+    localStorage.removeItem('bawra_admin_session');
   };
 
   const handleChangePasswordSubmit = async (e) => {
