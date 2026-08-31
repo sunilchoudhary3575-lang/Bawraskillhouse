@@ -1225,7 +1225,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
               <div>
                 <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#e11d48' }}>
-                  🏁 Batch End Date (Auto Duration)
+                  🏁 Batch End Date
                 </label>
                 <input
                   type="date"
@@ -1843,7 +1843,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 <div className="grid-2col" style={{ marginTop: '15px' }}>
                   <div className="underline-row">
                     <span className="underline-label">Student Signature:</span>
-                    <span className="underline-val">{selectedStudent.fullName}</span>
+                    <span className="underline-val"></span>
                   </div>
                   <div className="underline-row">
                     <span className="underline-label">Date:</span>
@@ -1876,7 +1876,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                     <span className="underline-val">{selectedStudent.batchStartDate || selectedStudent.signatureDate || '—'}</span>
                   </div>
                   <div className="underline-row">
-                    <span className="underline-label">Batch End Date (Expected):</span>
+                    <span className="underline-label">Batch End Date:</span>
                     <span className="underline-val" style={{ color: '#e11d48', fontWeight: 'bold' }}>{selectedStudent.batchEndDate || '—'}</span>
                   </div>
                 </div>
