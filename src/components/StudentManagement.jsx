@@ -98,6 +98,9 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   const [accountsCustomStartDate, setAccountsCustomStartDate] = useState('');
   const [accountsCustomEndDate, setAccountsCustomEndDate] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const [printingSingleReceiptId, setPrintingSingleReceiptId] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
   const [editingStudentId, setEditingStudentId] = useState(null);
   const printRef = useRef(null);
 
@@ -153,19 +156,17 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   useEffect(() => {
     const unsubStudents = subscribeStudents((remoteStudents) => {
       setStudents(remoteStudents);
+      setSelectedStudent(prevSelected => {
+        if (!prevSelected) return remoteStudents[0] || null;
+        const updated = remoteStudents.find(s => s.id === prevSelected.id);
+        return updated || prevSelected;
+      });
     });
 
     return () => {
       if (unsubStudents) unsubStudents();
     };
   }, []);
-
-  // Auto-select latest student if available and none selected
-  useEffect(() => {
-    if (!selectedStudent && students && students.length > 0) {
-      setSelectedStudent(students[0]);
-    }
-  }, [students]);
 
   // Word Counter Helper for Address
   const countWords = (text) => {
@@ -324,7 +325,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       paymentsHistory: paidNum > 0 ? [
         {
           id: `pay_${Date.now()}`,
-          date: new Date().toLocaleDateString(),
+          receiptNo: `REC-${formData.registrationId || 'BSH'}-1`,
+          date: formData.signatureDate || new Date().toLocaleDateString('en-GB'),
           amount: paidNum,
           mode: formData.paymentMode,
           receivedBy: formData.receivedBy || 'Bawra Skill House',
@@ -369,15 +371,22 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const newPaidTotal = (selectedStudent.paidAmount || 0) + amountNum;
     const newPending = effectiveTotal - newPaidTotal;
 
+    const newPaymentId = `pay_${Date.now()}`;
+    const currentHistory = selectedStudent.paymentsHistory || [];
+    const receiptIndex = currentHistory.length + 1;
+    const receiptNo = `REC-${selectedStudent.registrationId || 'BSH'}-${receiptIndex}`;
+
     const newPaymentEntry = {
-      id: `pay_${Date.now()}`,
-      date: new Date().toLocaleDateString(),
+      id: newPaymentId,
+      receiptNo: receiptNo,
+      date: paymentInput.date || new Date().toLocaleDateString('en-GB'),
       amount: amountNum,
-      mode: paymentInput.mode,
-      notes: paymentInput.notes || 'Installment Payment'
+      mode: paymentInput.mode || 'UPI',
+      receivedBy: paymentInput.receivedBy || 'Bawra Skill House',
+      notes: paymentInput.notes || `Installment ${receiptIndex}`
     };
 
-    const updatedHistory = [...(selectedStudent.paymentsHistory || []), newPaymentEntry];
+    const updatedHistory = [...currentHistory, newPaymentEntry];
 
     const updatedStudent = {
       ...selectedStudent,
@@ -390,6 +399,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const updatedList = students.map(s => s.id === selectedStudent.id ? updatedStudent : s);
     setStudents(updatedList);
     setSelectedStudent(updatedStudent);
+    setSelectedPaymentId(newPaymentId);
 
     // Update Firebase Firestore
     try {
@@ -399,8 +409,9 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     }
 
     setShowPaymentModal(false);
-    setPaymentInput({ amount: '', mode: 'UPI', notes: '' });
-    alert(`Payment of ₹${amountNum} recorded successfully!`);
+    setPaymentInput({ amount: '', mode: 'UPI', notes: '', receivedBy: 'Bawra Skill House' });
+    setActiveSubTab('view_invoice');
+    alert(`✅ New fee record of ₹${amountNum.toLocaleString()} added!\nReceipt (${receiptNo}) has been generated and displayed.`);
   };
 
   const handleDeleteStudent = async (studentId, studentName) => {
@@ -421,7 +432,99 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   };
 
   const handlePrint = () => {
-    window.print();
+    setPrintingSingleReceiptId(null);
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
+  const handlePrintSingleReceipt = (payId) => {
+    setPrintingSingleReceiptId(payId);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        setPrintingSingleReceiptId(null);
+      }, 500);
+    }, 150);
+  };
+
+  // Open Edit Payment modal
+  const handleOpenEditPayment = (payment) => {
+    setEditingPayment({ ...payment });
+  };
+
+  // Save Edit Payment
+  const handleSaveEditPayment = async () => {
+    if (!editingPayment || !selectedStudent) return;
+
+    const amt = parseFloat(editingPayment.amount);
+    if (!amt || amt <= 0) {
+      alert('Please enter a valid payment amount');
+      return;
+    }
+
+    const updatedHistory = (selectedStudent.paymentsHistory || []).map(p =>
+      p.id === editingPayment.id ? { ...editingPayment, amount: amt } : p
+    );
+
+    const newPaidTotal = updatedHistory.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const discountNum = parseFloat(selectedStudent.discountAmount) || 0;
+    const effectiveTotal = (selectedStudent.totalFee || 0) - discountNum;
+    const newPending = Math.max(0, effectiveTotal - newPaidTotal);
+
+    const updatedStudent = {
+      ...selectedStudent,
+      paidAmount: newPaidTotal,
+      pendingBalance: newPending,
+      paymentsHistory: updatedHistory
+    };
+
+    const updatedList = students.map(s => s.id === selectedStudent.id ? updatedStudent : s);
+    setStudents(updatedList);
+    setSelectedStudent(updatedStudent);
+    setEditingPayment(null);
+
+    try {
+      await addPaymentInstallmentToFirebase(selectedStudent.id, newPaidTotal, newPending, updatedHistory);
+    } catch (err) {
+      console.warn('Firestore payment update notice:', err);
+    }
+
+    alert('✅ Payment receipt updated successfully!');
+  };
+
+  // Delete Payment
+  const handleDeletePayment = async (payId) => {
+    if (!selectedStudent) return;
+    const targetPay = (selectedStudent.paymentsHistory || []).find(p => p.id === payId);
+    const payLabel = targetPay ? `₹${targetPay.amount} (${targetPay.notes || 'Fee Payment'})` : 'this payment';
+
+    if (window.confirm(`Are you sure you want to delete ${payLabel}? This will recalculate the student's total paid and pending balance.`)) {
+      const updatedHistory = (selectedStudent.paymentsHistory || []).filter(p => p.id !== payId);
+      const newPaidTotal = updatedHistory.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      const discountNum = parseFloat(selectedStudent.discountAmount) || 0;
+      const effectiveTotal = (selectedStudent.totalFee || 0) - discountNum;
+      const newPending = Math.max(0, effectiveTotal - newPaidTotal);
+
+      const updatedStudent = {
+        ...selectedStudent,
+        paidAmount: newPaidTotal,
+        pendingBalance: newPending,
+        paymentsHistory: updatedHistory
+      };
+
+      const updatedList = students.map(s => s.id === selectedStudent.id ? updatedStudent : s);
+      setStudents(updatedList);
+      setSelectedStudent(updatedStudent);
+
+      try {
+        await addPaymentInstallmentToFirebase(selectedStudent.id, newPaidTotal, newPending, updatedHistory);
+      } catch (err) {
+        console.warn('Firestore payment delete notice:', err);
+      }
+
+      alert('🗑️ Payment receipt deleted successfully!');
+    }
   };
 
   const filteredStudents = students.filter(s => {
@@ -924,7 +1027,45 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                           ₹{totalFee.toLocaleString()}
                           {discount > 0 && <div style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 'bold' }}>-₹{discount.toLocaleString()} Off</div>}
                         </td>
-                        <td style={{ padding: '0.8rem 1rem', color: '#16a34a', fontWeight: '600' }}>₹{paid.toLocaleString()}</td>
+                        <td style={{ padding: '0.8rem 1rem', minWidth: '150px' }}>
+                          <div style={{ color: '#16a34a', fontWeight: '800', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+                            ₹{paid.toLocaleString()}
+                          </div>
+                          {std.paymentsHistory && std.paymentsHistory.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.3rem' }}>
+                              {std.paymentsHistory.map((p, pIdx) => {
+                                const s = ["th", "st", "nd", "rd"];
+                                const v = (pIdx + 1) % 100;
+                                const ord = (pIdx + 1) + (s[(v - 20) % 10] || s[v] || s[0]);
+
+                                return (
+                                  <div
+                                    key={p.id || pIdx}
+                                    style={{
+                                      fontSize: '0.73rem',
+                                      background: '#f0fdf4',
+                                      color: '#15803d',
+                                      border: '1px solid #bbf7d0',
+                                      padding: '0.2rem 0.45rem',
+                                      borderRadius: '5px',
+                                      fontWeight: '600',
+                                      lineHeight: '1.2'
+                                    }}
+                                    title={`${p.receiptNo || 'Receipt'} | ${p.date || 'N/A'} | ${p.notes || 'Payment'}`}
+                                  >
+                                    <strong>{ord}:</strong> ₹{(parseFloat(p.amount) || 0).toLocaleString()} <span style={{ opacity: 0.8, fontSize: '0.68rem' }}>({p.mode || 'Cash'})</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : paid > 0 ? (
+                            <span style={{ fontSize: '0.72rem', color: '#16a34a', background: '#f0fdf4', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
+                              Initial Deposit
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>₹0</span>
+                          )}
+                        </td>
                         <td style={{ padding: '0.8rem 1rem', color: pending > 0 ? '#dc2626' : '#64748b', fontWeight: 'bold' }}>
                           ₹{pending > 0 ? pending.toLocaleString() : '0'}
                         </td>
@@ -2249,19 +2390,85 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ background: '#f1f5f9', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+                  <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Receipt No</th>
                   <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Date</th>
                   <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Amount Paid</th>
                   <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Payment Mode</th>
-                  <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Notes</th>
+                  <th style={{ padding: '0.6rem 1rem', textAlign: 'left' }}>Notes / Received By</th>
+                  <th style={{ padding: '0.6rem 1rem', textAlign: 'center' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {selectedStudent.paymentsHistory.map(pay => (
-                  <tr key={pay.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                {selectedStudent.paymentsHistory.map((pay, idx) => (
+                  <tr key={pay.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '0.7rem 1rem', fontWeight: 'bold', color: '#2563eb' }}>
+                      {pay.receiptNo || `REC-${selectedStudent.registrationId}-${idx + 1}`}
+                    </td>
                     <td style={{ padding: '0.7rem 1rem' }}>{pay.date}</td>
-                    <td style={{ padding: '0.7rem 1rem', color: '#16a34a', fontWeight: 'bold' }}>₹{pay.amount.toLocaleString()}</td>
+                    <td style={{ padding: '0.7rem 1rem', color: '#16a34a', fontWeight: 'bold' }}>₹{(parseFloat(pay.amount) || 0).toLocaleString()}</td>
                     <td style={{ padding: '0.7rem 1rem' }}>{pay.mode}</td>
-                    <td style={{ padding: '0.7rem 1rem', color: '#64748b' }}>{pay.notes}</td>
+                    <td style={{ padding: '0.7rem 1rem', color: '#64748b' }}>
+                      {pay.notes} {pay.receivedBy ? `(By: ${pay.receivedBy})` : ''}
+                    </td>
+                    <td style={{ padding: '0.7rem 1rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <button
+                        onClick={() => {
+                          setSelectedPaymentId(pay.id);
+                          setActiveSubTab('view_invoice');
+                          setTimeout(() => {
+                            const el = document.getElementById(`receipt-card-${pay.id}`);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }, 150);
+                        }}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: '#e11d48',
+                          color: '#ffffff',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          marginRight: '0.35rem',
+                          boxShadow: '0 2px 6px rgba(225, 29, 72, 0.2)'
+                        }}
+                      >
+                        🧾 View
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditPayment(pay)}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: '#f59e0b',
+                          color: '#ffffff',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          marginRight: '0.35rem',
+                          boxShadow: '0 2px 6px rgba(245, 158, 11, 0.2)'
+                        }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeletePayment(pay.id)}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: '#dc2626',
+                          color: '#ffffff',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 6px rgba(220, 38, 38, 0.2)'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2306,344 +2513,526 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       )}
 
       {/* ================= 5. GENERATED MONEY RECEIPT (PRINTABLE) ================= */}
-      {activeSubTab === 'view_invoice' && selectedStudent && (
-        <div>
-          <div className="printable-money-receipt" ref={printRef}>
-            <style>{`
-              @page {
-                size: A4 portrait;
-                margin: 5mm;
+      {activeSubTab === 'view_invoice' && selectedStudent && (() => {
+        const studentPayments = (selectedStudent.paymentsHistory && selectedStudent.paymentsHistory.length > 0)
+          ? selectedStudent.paymentsHistory
+          : [
+              {
+                id: `init_${selectedStudent.id}`,
+                receiptNo: `REC-${selectedStudent.registrationId || 'BSH'}-1`,
+                date: selectedStudent.signatureDate || (selectedStudent.createdAt ? new Date(selectedStudent.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')),
+                amount: selectedStudent.paidAmount || 0,
+                mode: selectedStudent.paymentMode || 'Cash',
+                receivedBy: selectedStudent.receivedBy || 'Bawra Skill House',
+                notes: 'Registration Deposit'
               }
+            ];
 
-              @media print {
-                html, body {
-                  height: 100%;
-                  margin: 0 !important;
-                  padding: 0 !important;
-                  background: #ffffff !important;
-                  -webkit-print-color-adjust: exact !important;
-                  print-color-adjust: exact !important;
-                }
-                body * {
-                  visibility: hidden;
-                }
-                .printable-money-receipt, .printable-money-receipt * {
-                  visibility: visible;
-                }
-                .printable-money-receipt {
-                  position: absolute;
-                  left: 0;
-                  top: 0;
-                  width: 100%;
-                  margin: 0;
-                  padding: 0;
-                  box-shadow: none !important;
-                }
-                .receipt-page-container {
-                  box-shadow: none !important;
-                  border: 1.5px solid #000000 !important;
-                  border-radius: 0 !important;
-                  padding: 0 !important;
-                  transform: scale(0.98);
-                  transform-origin: top center;
-                  page-break-inside: avoid;
-                  break-inside: avoid;
-                }
-                .no-print {
-                  display: none !important;
-                }
-              }
+        const getOrdinalText = (idx) => {
+          const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"];
+          return ordinals[idx] || `${idx + 1}th`;
+        };
 
-              .receipt-page-container {
-                max-width: 840px;
-                margin: 0 auto;
-                background: #ffffff;
-                border-radius: 8px;
-                border: 1.5px solid #222222;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-                position: relative;
-                color: #000000;
-                font-family: Arial, sans-serif;
-                overflow: hidden;
-                box-sizing: border-box;
-              }
-
-              .receipt-top-banner {
-                height: 30px;
-                background: linear-gradient(135deg, #2f4492 0%, #2f4492 37%, #ffffff 37%, #ffffff 38%, #e20074 38%, #e20074 100%);
-                width: 100%;
-              }
-
-              .receipt-header-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 28px 12px 28px;
-              }
-
-              .receipt-logo {
-                height: 56px;
-                object-fit: contain;
-              }
-
-              .receipt-sub-bar {
-                background: #2f4492;
-                color: #ffffff;
-                padding: 8px 28px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-weight: bold;
-                font-size: 0.98rem;
-                letter-spacing: 1px;
-                font-family: Arial, sans-serif;
-              }
-
-              .receipt-body-grid {
-                padding: 26px 32px 10px 32px;
-                display: grid;
-                grid-template-columns: 1.05fr 0.95fr;
-                gap: 16px 40px;
-              }
-
-              .receipt-field-row {
-                display: flex;
-                align-items: flex-end;
-                font-size: 0.95rem;
-                font-weight: bold;
-                color: #000000;
-                margin-bottom: 18px;
-                height: 26px;
-              }
-
-              .receipt-field-label {
-                white-space: nowrap;
-                margin-right: 6px;
-                font-weight: 700;
-                line-height: 1.2;
-                margin-bottom: 2px;
-              }
-
-              .receipt-field-dots-container {
-                flex: 1;
-                border-bottom: 2px dotted #000000;
-                display: flex;
-                align-items: flex-end;
-                height: 100%;
-                padding-bottom: 1px;
-              }
-
-              .receipt-field-val-text {
-                font-weight: 800;
-                color: #000000;
-                padding: 0 4px;
-                white-space: nowrap;
-                line-height: 1.1;
-              }
-
-              .receipt-footer-signatures {
-                padding: 20px 32px 30px 32px;
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                font-size: 0.95rem;
-                font-weight: bold;
-                color: #000000;
-              }
-            `}</style>
-
-            <div className="receipt-page-container">
-              {/* Exact Top Diagonal Color Banner */}
-              <div className="receipt-top-banner"></div>
-
-              {/* Top Header Branding Row */}
-              <div className="receipt-header-row">
-                {/* Left Logo */}
-                <div>
-                  <img src={logoImg} alt="Bawra Skill House Logo" className="receipt-logo" />
-                </div>
-
-                {/* Center Title & Contact */}
-                <div style={{ textAlign: 'center' }}>
-                  <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '900', color: '#000000', letterSpacing: '1px', fontFamily: 'Arial, sans-serif' }}>
-                    MONEY RECEIPT
-                  </h1>
-                  <p style={{ margin: '3px 0 0 0', fontSize: '0.58rem', fontWeight: 'bold', color: '#111111', letterSpacing: '-0.1px' }}>
-                    +91 63777 90409, +91 99506 83442 | contact@bawraskillhouse.com
-                  </p>
-                </div>
-
-                {/* Right Address */}
-                <div style={{ textAlign: 'right', fontSize: '0.74rem', fontWeight: 'bold', color: '#000000', lineHeight: '1.35' }}>
-                  <div>18/ 719, Opposite Chand Vilas</div>
-                  <div>Namkeen, Sector 18, CHB,</div>
-                  <div>Jodhpur, Rajasthan 342008</div>
-                </div>
+        return (
+          <div>
+            {/* Top Control Bar (Hidden during print) */}
+            <div className="no-print" style={{
+              marginBottom: '1.5rem',
+              padding: '1rem 1.2rem',
+              background: '#f8fafc',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <strong style={{ color: '#0f172a', fontSize: '1rem' }}>
+                  🧾 Official Money Receipts ({studentPayments.length} {studentPayments.length === 1 ? 'Installment' : 'Installments'})
+                </strong>
+                <p style={{ margin: '0.2rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Showing all generated fee receipts for <strong>{selectedStudent.fullName}</strong> sequentially below. Click "Print Only This Receipt" on any receipt card to print individually.
+                </p>
               </div>
 
-              {/* BILL NO and DATE Row */}
-              <div style={{
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                padding: '12px 32px 10px 32px',
-                background: '#ffffff',
-                fontSize: '1.05rem',
-                fontWeight: 'bold',
-                color: '#000000',
-                fontFamily: 'Arial, sans-serif'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ marginRight: '5px', fontWeight: 'bold', fontSize: '0.78rem' }}>BILL NO.</span>
-                  <span style={{ fontWeight: '800', color: '#000000', borderBottom: '1.5px solid #000000', padding: '0 3px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    {selectedStudent.registrationId}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'baseline', marginLeft: 'auto' }}>
-                  <span style={{ marginRight: '5px', fontWeight: 'bold', fontSize: '0.78rem' }}>DATE.</span>
-                  <span style={{ fontWeight: '800', color: '#000000', borderBottom: '1.5px solid #000000', padding: '0 3px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    {selectedStudent.signatureDate || new Date().toLocaleDateString('en-GB')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Purple Horizontal Strip Below BILL NO & DATE */}
-              <div style={{
-                height: '7px',
-                background: '#581c87',
-                width: '100%'
-              }}></div>
-
-              {/* 2-Column Dotted Fields (Single level continuous dotted line) */}
-              <div className="receipt-body-grid">
-                {/* Left Column */}
-                <div>
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Name</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">{selectedStudent.fullName}</span>
-                    </div>
-                  </div>
-
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Amount Paid</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">₹{(selectedStudent.paidAmount || 0).toLocaleString()}/-</span>
-                    </div>
-                  </div>
-
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Paid Through</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">
-                        {selectedStudent.paymentMode || (selectedStudent.paymentsHistory && selectedStudent.paymentsHistory[selectedStudent.paymentsHistory.length - 1]?.mode) || 'Cash'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start' }}>
-                    <span className="receipt-field-label" style={{ marginTop: '2px' }}>Address</span>
-                    <div className="receipt-field-dots-container" style={{ borderBottom: 'none' }}>
-                      <span className="receipt-field-val-text" style={{
-                        whiteSpace: 'normal',
-                        wordBreak: 'break-word',
-                        lineHeight: '1.45',
-                        borderBottom: '2px dotted #000000',
-                        display: 'inline',
-                        paddingBottom: '1px'
-                      }}>
-                        {selectedStudent.address || '—'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div>
-                  <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start' }}>
-                    <span className="receipt-field-label" style={{ marginTop: '2px' }}>Course</span>
-                    <div className="receipt-field-dots-container" style={{ borderBottom: 'none' }}>
-                      <span className="receipt-field-val-text" style={{
-                        whiteSpace: 'normal',
-                        wordBreak: 'break-word',
-                        lineHeight: '1.45',
-                        borderBottom: '2px dotted #000000',
-                        display: 'inline',
-                        paddingBottom: '1px'
-                      }}>
-                        {(selectedStudent.courses || []).join(', ') || 'General'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {selectedStudent.discountAmount > 0 && (
-                    <div className="receipt-field-row">
-                      <span className="receipt-field-label">Discount</span>
-                      <div className="receipt-field-dots-container">
-                        <span className="receipt-field-val-text">₹{(selectedStudent.discountAmount).toLocaleString()}/-</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Due Amount</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">
-                        ₹{Math.max(0, ((selectedStudent.totalFee || 0) - (selectedStudent.discountAmount || 0)) - (selectedStudent.paidAmount || 0)).toLocaleString()}/-
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Student Phone No</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">{selectedStudent.mobile}</span>
-                    </div>
-                  </div>
-
-                  <div className="receipt-field-row">
-                    <span className="receipt-field-label">Father’s Name</span>
-                    <div className="receipt-field-dots-container">
-                      <span className="receipt-field-val-text">{selectedStudent.guardianName || '—'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Signatures Row */}
-              <div className="receipt-footer-signatures">
-                <div className="receipt-field-row" style={{ width: '45%', marginBottom: 0 }}>
-                  <span className="receipt-field-label">Received By</span>
-                  <div className="receipt-field-dots-container">
-                    <span className="receipt-field-val-text">
-                      {selectedStudent.receivedBy || (selectedStudent.paymentsHistory && selectedStudent.paymentsHistory[selectedStudent.paymentsHistory.length - 1]?.receivedBy) || 'Bawra Skill House'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="receipt-field-row" style={{ width: '48%', marginBottom: 0, position: 'relative' }}>
-                  <span className="receipt-field-label">Authorized Signature</span>
-                  <div className="receipt-field-dots-container" style={{ position: 'relative', overflow: 'visible' }}>
-                    <img
-                      src={signatureImg}
-                      alt="Authorized Signature"
-                      style={{
-                        position: 'absolute',
-                        bottom: '2px',
-                        left: '45px',
-                        height: '45px',
-                        objectFit: 'contain',
-                        mixBlendMode: 'multiply'
-                      }}
-                    />
-                  </div>
-                </div>
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={handlePrint}
+                  style={{
+                    padding: '0.55rem 1.1rem',
+                    borderRadius: '8px',
+                    border: '1.5px solid #2563eb',
+                    background: '#eff6ff',
+                    color: '#1d4ed8',
+                    fontWeight: 'bold',
+                    fontSize: '0.88rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🖨️ Print All Receipts ({studentPayments.length})
+                </button>
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  style={{
+                    padding: '0.55rem 1.1rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)'
+                  }}
+                >
+                  💵 Record New Fee Payment
+                </button>
               </div>
             </div>
+
+            <div className="printable-money-receipt" ref={printRef}>
+              <style>{`
+                @page {
+                  size: A4 portrait;
+                  margin: 5mm;
+                }
+
+                @media print {
+                  html, body {
+                    height: 100%;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #ffffff !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+                  body * {
+                    visibility: hidden;
+                  }
+                  .printable-money-receipt, .printable-money-receipt * {
+                    visibility: visible;
+                  }
+                  .printable-money-receipt {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                    box-shadow: none !important;
+                  }
+                  ${printingSingleReceiptId ? `
+                    .single-receipt-card {
+                      display: none !important;
+                    }
+                    #receipt-card-${printingSingleReceiptId} {
+                      display: block !important;
+                      page-break-after: avoid !important;
+                      break-after: avoid !important;
+                    }
+                  ` : `
+                    .single-receipt-card {
+                      page-break-after: always;
+                      break-after: page;
+                      margin-bottom: 0 !important;
+                    }
+                    .single-receipt-card:last-child {
+                      page-break-after: avoid;
+                      break-after: avoid;
+                    }
+                  `}
+                  .receipt-page-container {
+                    box-shadow: none !important;
+                    border: 1.5px solid #000000 !important;
+                    border-radius: 0 !important;
+                    padding: 0 !important;
+                    transform: scale(0.98);
+                    transform-origin: top center;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                  }
+                  .no-print {
+                    display: none !important;
+                  }
+                }
+
+                .receipt-page-container {
+                  max-width: 840px;
+                  margin: 0 auto;
+                  background: #ffffff;
+                  border-radius: 8px;
+                  border: 1.5px solid #222222;
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+                  position: relative;
+                  color: #000000;
+                  font-family: Arial, sans-serif;
+                  overflow: hidden;
+                  box-sizing: border-box;
+                }
+
+                .receipt-top-banner {
+                  height: 30px;
+                  background: linear-gradient(135deg, #2f4492 0%, #2f4492 37%, #ffffff 37%, #ffffff 38%, #e20074 38%, #e20074 100%);
+                  width: 100%;
+                }
+
+                .receipt-header-row {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 16px 28px 12px 28px;
+                }
+
+                .receipt-logo {
+                  height: 56px;
+                  object-fit: contain;
+                }
+
+                .receipt-body-grid {
+                  padding: 26px 32px 10px 32px;
+                  display: grid;
+                  grid-template-columns: 1.05fr 0.95fr;
+                  gap: 16px 40px;
+                }
+
+                .receipt-field-row {
+                  display: flex;
+                  align-items: flex-end;
+                  font-size: 0.95rem;
+                  font-weight: bold;
+                  color: #000000;
+                  margin-bottom: 18px;
+                  height: 26px;
+                }
+
+                .receipt-field-label {
+                  white-space: nowrap;
+                  margin-right: 6px;
+                  font-weight: 700;
+                  line-height: 1.2;
+                  margin-bottom: 2px;
+                }
+
+                .receipt-field-dots-container {
+                  flex: 1;
+                  border-bottom: 2px dotted #000000;
+                  display: flex;
+                  align-items: flex-end;
+                  height: 100%;
+                  padding-bottom: 1px;
+                }
+
+                .receipt-field-val-text {
+                  font-weight: 800;
+                  color: #000000;
+                  padding: 0 4px;
+                  white-space: nowrap;
+                  line-height: 1.1;
+                }
+
+                .receipt-footer-signatures {
+                  padding: 20px 32px 30px 32px;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  font-size: 0.95rem;
+                  font-weight: bold;
+                  color: #000000;
+                }
+              `}</style>
+
+              {studentPayments.map((pay, idx) => {
+                const receiptNo = pay.receiptNo || `REC-${selectedStudent.registrationId || 'BSH'}-${idx + 1}`;
+                const ordinalStr = getOrdinalText(idx);
+                const installmentLabel = `${ordinalStr} Installment`;
+
+                return (
+                  <div key={pay.id || idx} id={`receipt-card-${pay.id}`} className="single-receipt-card" style={{ marginBottom: '2.5rem' }}>
+                    {/* Header badge above each receipt card in web view */}
+                    <div className="no-print" style={{
+                      maxWidth: '840px',
+                      margin: '0 auto 0.5rem auto',
+                      display: 'flex',
+                      justify: 'space-between',
+                      alignItems: 'center',
+                      background: '#0a0e29',
+                      color: '#ffffff',
+                      padding: '0.6rem 1.2rem',
+                      borderRadius: '8px 8px 0 0',
+                      fontWeight: 'bold',
+                      fontSize: '0.92rem'
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        🧾 <span>{installmentLabel.toUpperCase()} MONEY RECEIPT</span>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#93c5fd', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                          Bill No: {receiptNo}
+                        </span>
+                        <button
+                          onClick={() => handleOpenEditPayment(pay)}
+                          style={{
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: '#f59e0b',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)'
+                          }}
+                          title="Edit this fee payment receipt"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeletePayment(pay.id)}
+                          style={{
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: '#dc2626',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)'
+                          }}
+                          title="Delete this fee payment receipt"
+                        >
+                          🗑️ Delete
+                        </button>
+                        <button
+                          onClick={() => handlePrintSingleReceipt(pay.id)}
+                          style={{
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: '#e11d48',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 6px rgba(225, 29, 72, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}
+                          title={`Print only ${installmentLabel} receipt`}
+                        >
+                          🖨️ Print
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="receipt-page-container">
+                      {/* Exact Top Diagonal Color Banner */}
+                      <div className="receipt-top-banner"></div>
+
+                      {/* Top Header Branding Row */}
+                      <div className="receipt-header-row">
+                        <div>
+                          <img src={logoImg} alt="Bawra Skill House Logo" className="receipt-logo" />
+                        </div>
+
+                        <div style={{ textAlign: 'center' }}>
+                          <h1 style={{ margin: 0, fontSize: '1.9rem', fontWeight: '900', color: '#000000', letterSpacing: '1px', fontFamily: 'Arial, sans-serif' }}>
+                            MONEY RECEIPT
+                          </h1>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#e20074', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            ({installmentLabel})
+                          </span>
+                          <p style={{ margin: '3px 0 0 0', fontSize: '0.58rem', fontWeight: 'bold', color: '#111111', letterSpacing: '-0.1px' }}>
+                            +91 63777 90409, +91 99506 83442 | contact@bawraskillhouse.com
+                          </p>
+                        </div>
+
+                        <div style={{ textAlign: 'right', fontSize: '0.74rem', fontWeight: 'bold', color: '#000000', lineHeight: '1.35' }}>
+                          <div>18/ 719, Opposite Chand Vilas</div>
+                          <div>Namkeen, Sector 18, CHB,</div>
+                          <div>Jodhpur, Rajasthan 342008</div>
+                        </div>
+                      </div>
+
+                      {/* BILL NO and DATE Row */}
+                      <div style={{
+                        display: 'flex',
+                        justify: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px 32px 10px 32px',
+                        background: '#ffffff',
+                        fontSize: '1.05rem',
+                        fontWeight: 'bold',
+                        color: '#000000',
+                        fontFamily: 'Arial, sans-serif'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                          <span style={{ marginRight: '5px', fontWeight: 'bold', fontSize: '0.78rem' }}>RECEIPT / BILL NO.</span>
+                          <span style={{ fontWeight: '800', color: '#000000', borderBottom: '1.5px solid #000000', padding: '0 3px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                            {receiptNo}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'baseline', marginLeft: 'auto' }}>
+                          <span style={{ marginRight: '5px', fontWeight: 'bold', fontSize: '0.78rem' }}>DATE.</span>
+                          <span style={{ fontWeight: '800', color: '#000000', borderBottom: '1.5px solid #000000', padding: '0 3px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                            {pay.date || selectedStudent.signatureDate || new Date().toLocaleDateString('en-GB')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Purple Horizontal Strip Below BILL NO & DATE */}
+                      <div style={{
+                        height: '7px',
+                        background: '#581c87',
+                        width: '100%'
+                      }}></div>
+
+                      {/* 2-Column Dotted Fields */}
+                      <div className="receipt-body-grid">
+                        {/* Left Column */}
+                        <div>
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Name</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">{selectedStudent.fullName}</span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Amount Paid</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">₹{(parseFloat(pay.amount) || 0).toLocaleString()}/-</span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Paid Through</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">
+                                {pay.mode || 'Cash'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Particulars / Notes</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">
+                                {pay.notes || `${installmentLabel} Deposit`}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start' }}>
+                            <span className="receipt-field-label" style={{ marginTop: '2px' }}>Address</span>
+                            <div className="receipt-field-dots-container" style={{ borderBottom: 'none' }}>
+                              <span className="receipt-field-val-text" style={{
+                                whiteSpace: 'normal',
+                                wordBreak: 'break-word',
+                                lineHeight: '1.45',
+                                borderBottom: '2px dotted #000000',
+                                display: 'inline',
+                                paddingBottom: '1px'
+                              }}>
+                                {selectedStudent.address || '—'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Column */}
+                        <div>
+                          <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start' }}>
+                            <span className="receipt-field-label" style={{ marginTop: '2px' }}>Course</span>
+                            <div className="receipt-field-dots-container" style={{ borderBottom: 'none' }}>
+                              <span className="receipt-field-val-text" style={{
+                                whiteSpace: 'normal',
+                                wordBreak: 'break-word',
+                                lineHeight: '1.45',
+                                borderBottom: '2px dotted #000000',
+                                display: 'inline',
+                                paddingBottom: '1px'
+                              }}>
+                                {(selectedStudent.courses || []).join(', ') || 'General'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {selectedStudent.discountAmount > 0 && (
+                            <div className="receipt-field-row">
+                              <span className="receipt-field-label">Discount</span>
+                              <div className="receipt-field-dots-container">
+                                <span className="receipt-field-val-text">₹{(selectedStudent.discountAmount).toLocaleString()}/-</span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Remaining Balance</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">
+                                ₹{Math.max(0, ((selectedStudent.totalFee || 0) - (selectedStudent.discountAmount || 0)) - (selectedStudent.paidAmount || 0)).toLocaleString()}/-
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Student Phone No</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">{selectedStudent.mobile}</span>
+                            </div>
+                          </div>
+
+                          <div className="receipt-field-row">
+                            <span className="receipt-field-label">Father’s Name</span>
+                            <div className="receipt-field-dots-container">
+                              <span className="receipt-field-val-text">{selectedStudent.guardianName || '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Signatures Row */}
+                      <div className="receipt-footer-signatures">
+                        <div className="receipt-field-row" style={{ width: '45%', marginBottom: 0 }}>
+                          <span className="receipt-field-label">Received By</span>
+                          <div className="receipt-field-dots-container">
+                            <span className="receipt-field-val-text">
+                              {pay.receivedBy || selectedStudent.receivedBy || 'Bawra Skill House'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="receipt-field-row" style={{ width: '48%', marginBottom: 0, position: 'relative' }}>
+                          <span className="receipt-field-label">Authorized Signature</span>
+                          <div className="receipt-field-dots-container" style={{ position: 'relative', overflow: 'visible' }}>
+                            <img
+                              src={signatureImg}
+                              alt="Authorized Signature"
+                              style={{
+                                position: 'absolute',
+                                bottom: '2px',
+                                left: '45px',
+                                height: '45px',
+                                objectFit: 'contain',
+                                mixBlendMode: 'multiply'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Payment Installment Modal */}
       {showPaymentModal && (
@@ -2715,6 +3104,109 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 Save Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Payment Installment Modal */}
+      {editingPayment && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{ background: '#fff', padding: '2rem', borderRadius: '12px', width: '90%', maxWidth: '420px' }}>
+            <h3 style={{ margin: '0 0 1.2rem 0', color: '#0a0e29', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              ✏️ Edit Fee Payment Receipt
+            </h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                Payment Amount (₹) *
+              </label>
+              <input
+                type="number"
+                value={editingPayment.amount}
+                onChange={e => setEditingPayment({ ...editingPayment, amount: e.target.value })}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                Payment Date *
+              </label>
+              <input
+                type="text"
+                placeholder="DD/MM/YYYY"
+                value={editingPayment.date || ''}
+                onChange={e => setEditingPayment({ ...editingPayment, date: e.target.value })}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                Payment Mode
+              </label>
+              <select
+                value={editingPayment.mode || 'UPI'}
+                onChange={e => setEditingPayment({ ...editingPayment, mode: e.target.value })}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              >
+                <option value="UPI">UPI / Google Pay / PhonePe</option>
+                <option value="Cash">Cash</option>
+                <option value="NetBanking">NetBanking / Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                Particulars / Notes
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 2nd Installment deposit"
+                value={editingPayment.notes || ''}
+                onChange={e => setEditingPayment({ ...editingPayment, notes: e.target.value })}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                Received By
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Bawra Skill House"
+                value={editingPayment.receivedBy || ''}
+                onChange={e => setEditingPayment({ ...editingPayment, receivedBy: e.target.value })}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingPayment(null)}
+                style={{ padding: '0.55rem 1.1rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEditPayment}
+                style={{ padding: '0.55rem 1.1rem', borderRadius: '6px', border: 'none', background: '#f59e0b', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Save Changes
               </button>
             </div>
           </div>

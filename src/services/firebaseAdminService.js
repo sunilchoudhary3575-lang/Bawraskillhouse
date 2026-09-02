@@ -28,9 +28,16 @@ export const subscribeStudents = (callback) => {
     return onSnapshot(colRef, (snapshot) => {
       const studentsList = [];
       snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const history = (data.paymentsHistory && Array.isArray(data.paymentsHistory)) ? data.paymentsHistory.map((p, idx) => ({
+          ...p,
+          receiptNo: p.receiptNo || `REC-${data.registrationId || 'BSH'}-${idx + 1}`
+        })) : [];
+
         studentsList.push({
           id: docSnap.id,
-          ...docSnap.data()
+          ...data,
+          paymentsHistory: history
         });
       });
       // Sort client-side by createdAt descending
