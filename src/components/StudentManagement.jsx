@@ -387,22 +387,33 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const receiptIndex = currentHistory.length + 1;
     const receiptNo = `REC-${selectedStudent.registrationId || 'BSH'}-${receiptIndex}`;
 
+    const payDateStr = formatDateDDMMYYYY(paymentInput.date);
+    const payNoteText = paymentInput.notes ? paymentInput.notes.trim() : `Installment ${receiptIndex}`;
+
     const newPaymentEntry = {
       id: newPaymentId,
       receiptNo: receiptNo,
-      date: formatDateDDMMYYYY(paymentInput.date),
+      date: payDateStr,
       amount: amountNum,
       mode: paymentInput.mode || 'UPI',
       receivedBy: paymentInput.receivedBy || 'Bawra Skill House',
-      notes: paymentInput.notes || `Installment ${receiptIndex}`
+      notes: payNoteText
     };
 
     const updatedHistory = [...currentHistory, newPaymentEntry];
+
+    // Append fee payment note to admin internal notes for reminder tracking
+    let updatedAdminNotes = selectedStudent.adminInternalNotes || '';
+    if (paymentInput.notes && paymentInput.notes.trim()) {
+      const noteLine = `• [Fee ${payDateStr}]: ${paymentInput.notes.trim()}`;
+      updatedAdminNotes = updatedAdminNotes ? `${updatedAdminNotes}\n${noteLine}` : noteLine;
+    }
 
     const updatedStudent = {
       ...selectedStudent,
       paidAmount: newPaidTotal,
       pendingBalance: newPending,
+      adminInternalNotes: updatedAdminNotes,
       paymentsHistory: updatedHistory
     };
 
@@ -414,7 +425,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
     // Update Firebase Firestore
     try {
-      await addPaymentInstallmentToFirebase(selectedStudent.id, newPaidTotal, newPending, updatedHistory);
+      await addPaymentInstallmentToFirebase(selectedStudent.id, newPaidTotal, newPending, updatedHistory, updatedAdminNotes);
     } catch (err) {
       console.warn('Firestore payment update notice:', err);
     }
@@ -1546,11 +1557,11 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             {userRole === 'superadmin' && (
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#6b21a8' }}>
-                  🔒 Internal Admin Notes (Private Office Use)
+                  📌 Private Internal Admin Notes & Reminders (Hidden from Student Receipts)
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter private office note..."
+                <textarea
+                  rows="2"
+                  placeholder="Enter private internal office note or reminder for admin..."
                   value={formData.adminInternalNotes || ''}
                   onChange={e => setFormData({ ...formData, adminInternalNotes: e.target.value })}
                   style={{
@@ -1560,7 +1571,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                     border: '1.5px dashed #8b5cf6',
                     backgroundColor: '#f5f3ff',
                     color: '#4c1d95',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -2355,7 +2367,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             </div>
           </div>
 
-          {/* Private Internal Admin Notes Box (Super Admin Only) */}
+          {/* Private Internal Admin Notes & Reminders Box */}
           {userRole === 'superadmin' && (
             <div style={{
               marginBottom: '2rem',
@@ -2366,12 +2378,12 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <strong style={{ color: '#6b21a8', fontSize: '0.95rem' }}>
-                  🔒 Private Internal Office Notes (Super Admin Only - Hidden from Student Print)
+                  📌 Private Internal Office Notes & Reminders (Admin Only - Hidden from Student Receipts)
                 </strong>
               </div>
               <textarea
-                rows="2"
-                placeholder="Enter private internal office notes..."
+                rows="3"
+                placeholder="Enter private internal office notes / reminders for this student (e.g. Next installment date, promises, special instructions)..."
                 value={selectedStudent.adminInternalNotes || ''}
                 onChange={async (e) => {
                   const updatedNotes = e.target.value;
@@ -2387,13 +2399,14 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 }}
                 style={{
                   width: '100%',
-                  padding: '0.6rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd6fe',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid #c4b5fd',
                   backgroundColor: '#ffffff',
                   color: '#4c1d95',
                   fontSize: '0.9rem',
-                  fontWeight: '500'
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box'
                 }}
               ></textarea>
             </div>
@@ -2942,16 +2955,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                             </div>
                           </div>
 
-                          <div className="receipt-field-row">
-                            <span className="receipt-field-label">Particulars / Notes</span>
-                            <div className="receipt-field-dots-container">
-                              <span className="receipt-field-val-text">
-                                {pay.notes || `${installmentLabel} Deposit`}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start' }}>
+                          <div className="receipt-field-row" style={{ height: 'auto', minHeight: '26px', alignItems: 'flex-start', marginTop: '2rem' }}>
                             <span className="receipt-field-label" style={{ marginTop: '2px' }}>Address</span>
                             <div className="receipt-field-dots-container" style={{ borderBottom: 'none' }}>
                               <span className="receipt-field-val-text" style={{

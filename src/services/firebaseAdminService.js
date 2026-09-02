@@ -120,15 +120,19 @@ export const deleteStudentFromFirebase = async (studentId) => {
  * @param {number} newPendingBalance 
  * @param {Array} updatedHistory 
  */
-export const addPaymentInstallmentToFirebase = async (studentId, newPaidTotal, newPendingBalance, updatedHistory) => {
+export const addPaymentInstallmentToFirebase = async (studentId, newPaidTotal, newPendingBalance, updatedHistory, adminInternalNotes) => {
   try {
     const studentRef = doc(db, 'students', studentId);
-    await updateDoc(studentRef, {
+    const updateData = {
       paidAmount: newPaidTotal,
       pendingBalance: newPendingBalance,
       paymentsHistory: updatedHistory,
       updatedAt: new Date().toISOString()
-    });
+    };
+    if (adminInternalNotes !== undefined) {
+      updateData.adminInternalNotes = adminInternalNotes;
+    }
+    await updateDoc(studentRef, updateData);
   } catch (err) {
     console.error('Error recording payment installment in Firestore:', err);
     throw err;
