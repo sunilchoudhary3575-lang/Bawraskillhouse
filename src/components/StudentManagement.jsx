@@ -71,6 +71,17 @@ export const parseDate = (dateVal) => {
   return null;
 };
 
+// Format date to DD/MM/YYYY
+export const formatDateDDMMYYYY = (dateVal) => {
+  if (!dateVal) return new Date().toLocaleDateString('en-GB');
+  const d = parseDate(dateVal);
+  if (!d) return dateVal;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 // Registration ID Generator Function (e.g. BSH-20260827001)
 export const generateRegistrationId = (currentStudentsList = []) => {
   const now = new Date();
@@ -326,7 +337,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
         {
           id: `pay_${Date.now()}`,
           receiptNo: `REC-${formData.registrationId || 'BSH'}-1`,
-          date: formData.signatureDate || new Date().toLocaleDateString('en-GB'),
+          date: formatDateDDMMYYYY(formData.signatureDate),
           amount: paidNum,
           mode: formData.paymentMode,
           receivedBy: formData.receivedBy || 'Bawra Skill House',
@@ -379,7 +390,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const newPaymentEntry = {
       id: newPaymentId,
       receiptNo: receiptNo,
-      date: paymentInput.date || new Date().toLocaleDateString('en-GB'),
+      date: formatDateDDMMYYYY(paymentInput.date),
       amount: amountNum,
       mode: paymentInput.mode || 'UPI',
       receivedBy: paymentInput.receivedBy || 'Bawra Skill House',
@@ -591,6 +602,12 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     }
 
     return true;
+  }).sort((a, b) => {
+    const timeA = (parseDate(a.createdAt) || parseDate(a.signatureDate) || new Date(0)).getTime();
+    const timeB = (parseDate(b.createdAt) || parseDate(b.signatureDate) || new Date(0)).getTime();
+    const diff = timeB - timeA;
+    if (diff !== 0) return diff;
+    return (b.registrationId || '').localeCompare(a.registrationId || '', undefined, { numeric: true, sensitivity: 'base' });
   });
 
   // Financial & Master Accounts Calculation
@@ -2404,7 +2421,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                     <td style={{ padding: '0.7rem 1rem', fontWeight: 'bold', color: '#2563eb' }}>
                       {pay.receiptNo || `REC-${selectedStudent.registrationId}-${idx + 1}`}
                     </td>
-                    <td style={{ padding: '0.7rem 1rem' }}>{pay.date}</td>
+                    <td style={{ padding: '0.7rem 1rem' }}>{formatDateDDMMYYYY(pay.date)}</td>
                     <td style={{ padding: '0.7rem 1rem', color: '#16a34a', fontWeight: 'bold' }}>₹{(parseFloat(pay.amount) || 0).toLocaleString()}</td>
                     <td style={{ padding: '0.7rem 1rem' }}>{pay.mode}</td>
                     <td style={{ padding: '0.7rem 1rem', color: '#64748b' }}>
@@ -2886,7 +2903,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                         <div style={{ display: 'flex', alignItems: 'baseline', marginLeft: 'auto' }}>
                           <span style={{ marginRight: '5px', fontWeight: 'bold', fontSize: '0.78rem' }}>DATE.</span>
                           <span style={{ fontWeight: '800', color: '#000000', borderBottom: '1.5px solid #000000', padding: '0 3px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                            {pay.date || selectedStudent.signatureDate || new Date().toLocaleDateString('en-GB')}
+                            {formatDateDDMMYYYY(pay.date || selectedStudent.signatureDate)}
                           </span>
                         </div>
                       </div>

@@ -40,8 +40,19 @@ export const subscribeStudents = (callback) => {
           paymentsHistory: history
         });
       });
-      // Sort client-side by createdAt descending
-      studentsList.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      // Sort client-side by newest first (createdAt / signatureDate / registrationId descending)
+      studentsList.sort((a, b) => {
+        const getTs = (val) => {
+          if (!val) return 0;
+          const d = new Date(val);
+          return isNaN(d.getTime()) ? 0 : d.getTime();
+        };
+        const timeA = getTs(a.createdAt) || getTs(a.signatureDate);
+        const timeB = getTs(b.createdAt) || getTs(b.signatureDate);
+        const diff = timeB - timeA;
+        if (diff !== 0) return diff;
+        return (b.registrationId || '').localeCompare(a.registrationId || '', undefined, { numeric: true, sensitivity: 'base' });
+      });
       callback(studentsList);
     }, (error) => {
       console.warn('Firestore real-time students subscription warning:', error);
