@@ -2747,6 +2747,13 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 const receiptNo = pay.receiptNo || `REC-${selectedStudent.registrationId || 'BSH'}-${idx + 1}`;
                 const ordinalStr = getOrdinalText(idx);
                 const installmentLabel = `${ordinalStr} Installment`;
+                const paidUpToThisPay = studentPayments
+                  .slice(0, idx + 1)
+                  .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                const remainingAfterThisPay = Math.max(
+                  0,
+                  ((selectedStudent.totalFee || 0) - (selectedStudent.discountAmount || 0)) - paidUpToThisPay
+                );
 
                 return (
                   <div key={pay.id || idx} id={`receipt-card-${pay.id}`} className="single-receipt-card" style={{ marginBottom: '2.5rem' }}>
@@ -2975,7 +2982,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                             <span className="receipt-field-label">Remaining Balance</span>
                             <div className="receipt-field-dots-container">
                               <span className="receipt-field-val-text">
-                                ₹{Math.max(0, ((selectedStudent.totalFee || 0) - (selectedStudent.discountAmount || 0)) - (selectedStudent.paidAmount || 0)).toLocaleString()}/-
+                                ₹{remainingAfterThisPay.toLocaleString()}/-
                               </span>
                             </div>
                           </div>
