@@ -1911,6 +1911,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
               @media print {
                 html, body {
                   height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
                   margin: 0 !important;
                   padding: 0 !important;
                   background: #ffffff !important;
@@ -1924,37 +1926,61 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                   visibility: visible;
                 }
                 .printable-registration-form {
-                  position: absolute;
-                  left: 0;
-                  top: 0;
-                  width: 100%;
-                  margin: 0;
-                  padding: 0;
+                  position: relative !important;
+                  width: 100% !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
                   box-shadow: none !important;
+                  overflow: visible !important;
                 }
                 .form-page-container {
                   box-shadow: none !important;
                   border: none !important;
                   border-radius: 0 !important;
-                  padding: 10px 18px !important;
-                  transform: scale(0.95);
-                  transform-origin: top center;
-                  page-break-after: always;
-                  break-after: page;
-                  page-break-inside: avoid;
-                  break-inside: avoid;
+                  padding: 6px 12px !important;
+                  margin: 0 !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  overflow: visible !important;
+                  page-break-after: always !important;
+                  break-after: page !important;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
                 }
                 .terms-page-container {
                   box-shadow: none !important;
                   border: none !important;
                   border-radius: 0 !important;
-                  padding: 10px 18px !important;
-                  transform: scale(0.95);
-                  transform-origin: top center;
-                  page-break-before: always;
-                  break-before: page;
-                  page-break-inside: avoid;
-                  break-inside: avoid;
+                  padding: 4px 10px !important;
+                  margin: 0 !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  overflow: visible !important;
+                  page-break-before: always !important;
+                  break-before: page !important;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                }
+                .terms-inner-box {
+                  padding: 6px 10px !important;
+                }
+                .terms-points-list {
+                  font-size: 0.65rem !important;
+                  line-height: 1.22 !important;
+                }
+                .terms-points-list strong {
+                  font-size: 0.68rem !important;
+                }
+                .terms-points-list ul {
+                  margin: 0.5px 0 0 12px !important;
+                }
+                .terms-points-list > div {
+                  margin-bottom: 2px !important;
+                }
+                .terms-sig-box {
+                  padding: 4px 8px !important;
+                  margin-top: 3px !important;
+                  font-size: 0.67rem !important;
                 }
                 .no-print {
                   display: none !important;
@@ -2319,53 +2345,53 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
             {/* PAGE 2: STUDENT TERMS & CONDITIONS */}
             <div className="terms-page-container">
-              <div style={{
+              <div className="terms-inner-box" style={{
                 border: '1.5px solid #0f172a',
                 borderRadius: '8px',
-                padding: '14px 18px',
+                padding: '10px 14px',
                 boxSizing: 'border-box'
               }}>
                 {/* Header Branding */}
-                <div style={{ textAlign: 'center', marginBottom: '8px', borderBottom: '2px solid #0f172a', paddingBottom: '4px' }}>
-                  <h2 style={{ margin: '0 0 2px 0', fontSize: '1.25rem', fontWeight: '900', color: '#0a0e29', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                <div style={{ textAlign: 'center', marginBottom: '6px', borderBottom: '2px solid #0f172a', paddingBottom: '4px' }}>
+                  <h2 style={{ margin: '0 0 2px 0', fontSize: '1.15rem', fontWeight: '900', color: '#0a0e29', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
                     BAWRA SKILL HOUSE
                   </h2>
-                  <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#e11d48', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  <h3 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#e11d48', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                     STUDENT TERMS & CONDITIONS
                   </h3>
                 </div>
 
                 {/* Summary Info Table */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8px', fontSize: '0.76rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px', fontSize: '0.72rem' }}>
                   <tbody>
                     <tr>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '4px 8px', background: '#f8fafc', width: '50%', fontWeight: '600' }}>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '3px 6px', background: '#f8fafc', width: '50%', fontWeight: '600' }}>
                         Course Duration: <span style={{ fontWeight: 'normal' }}>45 Days</span>
                       </td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '4px 8px', background: '#f8fafc', width: '50%', fontWeight: '600' }}>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '3px 6px', background: '#f8fafc', width: '50%', fontWeight: '600' }}>
                         Class Days: <span style={{ fontWeight: 'normal' }}>Monday to Saturday</span>
                       </td>
                     </tr>
                     <tr>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '4px 8px', background: '#f8fafc', fontWeight: '600' }}>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '3px 6px', background: '#f8fafc', fontWeight: '600' }}>
                         Sunday: <span style={{ fontWeight: 'normal' }}>Weekly Off</span>
                       </td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '4px 8px', background: '#f8fafc', fontWeight: '600' }}>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '3px 6px', background: '#f8fafc', fontWeight: '600' }}>
                         Registration: <span style={{ fontWeight: 'normal' }}>Subject to these Terms & Conditions</span>
                       </td>
                     </tr>
                   </tbody>
                 </table>
 
-                <p style={{ fontSize: '0.74rem', color: '#334155', margin: '0 0 8px 0', fontStyle: 'italic', fontWeight: '500' }}>
+                <p style={{ fontSize: '0.70rem', color: '#334155', margin: '0 0 6px 0', fontStyle: 'italic', fontWeight: '500' }}>
                   Bawra Skill House mein registration karne wala har student in Terms & Conditions ko read, understand aur accept karta/karti hai.
                 </p>
 
                 {/* Terms Points */}
-                <div style={{ fontSize: '0.73rem', color: '#0f172a', lineHeight: '1.35' }}>
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>1. Course Duration & Classes</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                <div className="terms-points-list" style={{ fontSize: '0.70rem', color: '#0f172a', lineHeight: '1.3' }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>1. Course Duration & Classes</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Har course ki total duration 45 Days rahegi.</li>
                       <li>Classes Monday to Saturday conduct hongi.</li>
                       <li>Sunday weekly off rahega.</li>
@@ -2373,90 +2399,90 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>2. Course Fees</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>2. Course Fees</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Course fees admission ke time ya agreed payment schedule ke according pay karni hogi.</li>
                       <li>Course/classes start hone ke baad paid fees refundable nahi hogi.</li>
                       <li>Pending fees clear na hone par institute student ki classes ya certificate ko temporarily hold kar sakta hai.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>3. Attendance</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>3. Attendance</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Student ko regular classes attend karna compulsory hai.</li>
                       <li>Student ki personal absence ke liye fee refund nahi hoga.</li>
                       <li>Missed classes ke liye extra class dena institute ke schedule aur availability par depend karega.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>4. Teacher / Trainer</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>4. Teacher / Trainer</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Course ke dauran teacher/trainer change kiya ja sakta hai, agar institute ki requirement, trainer availability ya kisi other genuine circumstance ki wajah se zaroori ho.</li>
                       <li>Teacher/trainer change hone par course ki 45 days ki duration same rahegi.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>5. Course & Schedule</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>5. Course & Schedule</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Course ke andar practical training, assignments, projects aur activities course requirement ke according hongi.</li>
                       <li>Institute course content, teaching method, trainer ya class schedule mein required changes kar sakta hai.</li>
                       <li>Kisi unavoidable situation mein postponed class ka revised schedule institute ke according decide kiya jayega.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>6. Certificate</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>6. Certificate</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Course complete karne aur institute ki required attendance, assignments aur assessments complete karne ke baad student ko course certificate issue kiya jayega.</li>
                       <li>Certificate job, placement, salary ya fixed income ki guarantee nahi deta.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>7. Job / Placement</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>7. Job / Placement</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Agar kisi particular course mein placement ya career support included hai, toh woh institute ki stated services ke according provide ki jayegi.</li>
                       <li>Job, salary, clients ya fixed income ki guarantee nahi hai.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>8. Student Behaviour</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>8. Student Behaviour</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Student ko teachers, staff aur other students ke saath respectful behaviour maintain karna hoga.</li>
                       <li>Abusive language, misbehaviour, harassment, disturbance ya institute property ko damage karna strictly prohibited hai.</li>
                       <li>Rules ka serious violation hone par institute student ka enrollment cancel karne ka right rakhta hai.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '5px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>9. Course Material</strong>
-                    <ul style={{ margin: '2px 0 0 16px', padding: 0 }}>
+                  <div style={{ marginBottom: '3.5px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>9. Course Material</strong>
+                    <ul style={{ margin: '1px 0 0 14px', padding: 0 }}>
                       <li>Course notes, videos, presentations, assignments aur other study material sirf student ke learning purpose ke liye hain.</li>
                       <li>Bina permission ke course material ko copy, share, sell ya commercially use karna allowed nahi hai.</li>
                     </ul>
                   </div>
 
-                  <div style={{ marginBottom: '6px' }}>
-                    <strong style={{ color: '#0a0e29', fontSize: '0.76rem' }}>10. Student Declaration</strong>
-                    <p style={{ margin: '2px 0 0 0', fontStyle: 'italic', color: '#334155' }}>
+                  <div style={{ marginBottom: '4px' }}>
+                    <strong style={{ color: '#0a0e29', fontSize: '0.73rem' }}>10. Student Declaration</strong>
+                    <p style={{ margin: '1px 0 0 0', fontStyle: 'italic', color: '#334155' }}>
                       “Main confirm karta/karti hoon ki maine Bawra Skill House ke Terms & Conditions ko read aur understand kar liya hai. Main institute ke rules, course duration, class schedule, fees, attendance aur certification related conditions ko accept karta/karti hoon.”
                     </p>
                   </div>
                 </div>
 
                 {/* Student Details & Signature Box */}
-                <div style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', background: '#f8fafc', marginTop: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontWeight: 'bold', fontSize: '0.76rem', color: '#0f172a' }}>
+                <div className="terms-sig-box" style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', background: '#f8fafc', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 'bold', fontSize: '0.72rem', color: '#0f172a' }}>
                     <span style={{ border: '1.5px solid #0f172a', width: '12px', height: '12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', borderRadius: '2px', background: '#fff' }}>✓</span>
                     <span>I Have Read & Agree to the Terms & Conditions</span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.76rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.72rem' }}>
                     <div className="underline-row">
                       <span className="underline-label">Student Name:</span>
                       <span className="underline-val" style={{ fontWeight: 'bold' }}>{selectedStudent.fullName}</span>
