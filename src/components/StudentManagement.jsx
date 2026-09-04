@@ -455,9 +455,277 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
   const handlePrint = () => {
     setPrintingSingleReceiptId(null);
-    setTimeout(() => {
+    const element = printRef.current;
+    if (!element) {
       window.print();
-    }, 100);
+      return;
+    }
+
+    let iframe = document.getElementById('bsh-print-iframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'bsh-print-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.style.visibility = 'hidden';
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Registration Form - ${selectedStudent?.fullName || 'Bawra Skill House'}</title>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 4mm 6mm;
+            }
+            *, *::before, *::after {
+              box-sizing: border-box !important;
+              visibility: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #ffffff !important;
+              font-family: 'Inter', sans-serif;
+              color: #1e293b;
+              visibility: visible !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .printable-registration-form, .printable-registration-form * {
+              visibility: visible !important;
+            }
+            @page {
+              size: A4 portrait;
+              margin: 4mm 6mm;
+            }
+            *, *::before, *::after {
+              box-sizing: border-box !important;
+              visibility: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #ffffff !important;
+              font-family: 'Inter', sans-serif;
+              color: #1e293b;
+              visibility: visible !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .printable-registration-form, .printable-registration-form * {
+              visibility: visible !important;
+            }
+            .form-page-container {
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 auto !important;
+              background: #ffffff !important;
+              padding: 20px 26px !important;
+              box-sizing: border-box !important;
+              position: relative !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              page-break-after: always !important;
+              break-after: page !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .terms-page-container {
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 auto !important;
+              margin-top: 0 !important;
+              background: #ffffff !important;
+              padding: 16px 22px !important;
+              box-sizing: border-box !important;
+              position: relative !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              page-break-before: always !important;
+              break-before: page !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .top-corner-accent {
+              position: absolute;
+              top: 0;
+              right: 0;
+              width: 250px;
+              height: 58px;
+              background: linear-gradient(135deg, #0a0e29 45%, #e11d48 45%, #e11d48 70%, #ff9a00 70%);
+              clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 0);
+            }
+            .form-header-box {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              padding-bottom: 4px;
+            }
+            .form-logo-img {
+              height: 48px;
+              object-fit: contain;
+            }
+            .main-form-title {
+              text-align: center;
+              color: #e11d48;
+              font-size: 1.3rem;
+              font-weight: 800;
+              letter-spacing: 1px;
+              margin: 8px 0 14px 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 12px;
+            }
+            .main-form-title::before, .main-form-title::after {
+              content: '';
+              flex: 1;
+              height: 2.5px;
+              background: #e11d48;
+            }
+            .form-section-box {
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              padding: 10px 14px 8px 14px;
+              margin-bottom: 12px;
+              position: relative;
+            }
+            .sec-heading {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              color: #ffffff;
+              padding: 5px 12px;
+              border-radius: 5px;
+              font-size: 0.85rem;
+              font-weight: 700;
+              letter-spacing: 0.4px;
+              margin-bottom: 9px;
+            }
+            .sec-num-badge {
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background: #ffffff;
+              color: #0a0e29;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 0.75rem;
+              font-weight: 800;
+            }
+            .underline-row {
+              display: flex;
+              align-items: baseline;
+              gap: 6px;
+              margin-bottom: 7px;
+              font-size: 0.86rem;
+            }
+            .underline-label {
+              font-weight: 600;
+              color: #0f172a;
+              white-space: nowrap;
+            }
+            .underline-val {
+              flex: 1;
+              border-bottom: 1.5px solid #0f172a;
+              padding-bottom: 1px;
+              font-weight: 500;
+              color: #000000;
+              min-height: 20px;
+            }
+            .grid-2col {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px 16px;
+            }
+            .course-check-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 6px 16px;
+            }
+            .course-check-item {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-size: 0.85rem;
+              font-weight: 600;
+              padding: 3px 0;
+            }
+            .checkbox-box {
+              width: 16px;
+              height: 16px;
+              border: 1.5px solid #0f172a;
+              border-radius: 3px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 0.75rem;
+              font-weight: bold;
+            }
+            .terms-inner-box {
+              border: 1.5px solid #0f172a;
+              border-radius: 8px;
+              padding: 12px 16px;
+              box-sizing: border-box;
+            }
+            .terms-points-list {
+              font-size: 0.72rem;
+              line-height: 1.34;
+              color: #0f172a;
+            }
+            .terms-points-list strong {
+              font-size: 0.76rem;
+              color: #0a0e29;
+            }
+            .terms-points-list ul {
+              margin: 2px 0 0 16px;
+              padding: 0;
+            }
+            .terms-points-list > div {
+              margin-bottom: 4.5px;
+            }
+            .terms-sig-box {
+              border: 1px solid #cbd5e1;
+              border-radius: 6px;
+              padding: 8px 12px;
+              background: #f8fafc;
+              margin-top: 8px;
+              font-size: 0.76rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="printable-registration-form">
+            ${element.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   };
 
   const handlePrintSingleReceipt = (payId) => {
@@ -1926,61 +2194,91 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                   visibility: visible;
                 }
                 .printable-registration-form {
-                  position: relative !important;
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
                   width: 100% !important;
                   margin: 0 !important;
                   padding: 0 !important;
                   box-shadow: none !important;
-                  overflow: visible !important;
                 }
                 .form-page-container {
                   box-shadow: none !important;
                   border: none !important;
                   border-radius: 0 !important;
-                  padding: 6px 12px !important;
-                  margin: 0 !important;
+                  padding: 20px 26px !important;
+                  margin: 0 auto !important;
                   width: 100% !important;
                   max-width: 100% !important;
-                  overflow: visible !important;
+                  box-sizing: border-box !important;
                   page-break-after: always !important;
                   break-after: page !important;
                   page-break-inside: avoid !important;
                   break-inside: avoid !important;
                 }
+                .printable-registration-form .form-section-box {
+                  margin-bottom: 12px !important;
+                  padding: 10px 14px 8px 14px !important;
+                }
+                .printable-registration-form .underline-row {
+                  margin-bottom: 7px !important;
+                  font-size: 0.86rem !important;
+                }
+                .printable-registration-form .underline-val {
+                  min-height: 20px !important;
+                }
+                .printable-registration-form .sec-heading {
+                  padding: 5px 12px !important;
+                  font-size: 0.85rem !important;
+                  margin-bottom: 9px !important;
+                }
+                .printable-registration-form .main-form-title {
+                  font-size: 1.3rem !important;
+                  margin: 8px 0 14px 0 !important;
+                }
+                .printable-registration-form .form-header-box {
+                  margin-bottom: 8px !important;
+                }
+                .printable-registration-form .form-logo-img {
+                  height: 48px !important;
+                }
                 .terms-page-container {
                   box-shadow: none !important;
                   border: none !important;
                   border-radius: 0 !important;
-                  padding: 4px 10px !important;
-                  margin: 0 !important;
+                  padding: 16px 22px !important;
+                  margin: 0 auto !important;
+                  margin-top: 0 !important;
                   width: 100% !important;
                   max-width: 100% !important;
-                  overflow: visible !important;
+                  box-sizing: border-box !important;
                   page-break-before: always !important;
                   break-before: page !important;
+                  page-break-after: avoid !important;
+                  break-after: avoid !important;
                   page-break-inside: avoid !important;
                   break-inside: avoid !important;
                 }
                 .terms-inner-box {
-                  padding: 6px 10px !important;
+                  padding: 12px 16px !important;
                 }
                 .terms-points-list {
-                  font-size: 0.65rem !important;
-                  line-height: 1.22 !important;
+                  font-size: 0.72rem !important;
+                  line-height: 1.34 !important;
                 }
                 .terms-points-list strong {
-                  font-size: 0.68rem !important;
+                  font-size: 0.76rem !important;
                 }
                 .terms-points-list ul {
-                  margin: 0.5px 0 0 12px !important;
+                  margin: 2px 0 0 16px !important;
                 }
                 .terms-points-list > div {
-                  margin-bottom: 2px !important;
+                  margin-bottom: 4.5px !important;
                 }
                 .terms-sig-box {
-                  padding: 4px 8px !important;
-                  margin-top: 3px !important;
-                  font-size: 0.67rem !important;
+                  padding: 8px 12px !important;
+                  margin-top: 8px !important;
+                  font-size: 0.76rem !important;
                 }
                 .no-print {
                   display: none !important;

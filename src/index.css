@@ -893,3 +893,17 @@ a {
     padding-bottom: 1rem;
   }
 }
+
+/* Global Print Settings */
+@media print {
+  .no-print,
+  header,
+  footer,
+  .whatsapp-float,
+  .mobile-sticky-cta,
+  .lead-popup-overlay,
+  .site-header {
+    display: none !important;
+  }
+}
+
