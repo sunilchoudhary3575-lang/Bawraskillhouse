@@ -13,10 +13,10 @@ import {
 export const COURSE_OPTIONS = [
   { name: 'Graphic Designing', price: 20000, desc: 'Professional visual design, Photoshop & Illustrator (45 Days / 1.5 Months).', icon: '🎨', days: 45 },
   { name: 'Video Editing', price: 20000, desc: 'Premiere Pro, After Effects, Reels & Ad editing (45 Days / 1.5 Months).', icon: '🎥', days: 45 },
-  { name: 'Cinematography & Film Making', price: 35000, desc: 'Camera, Drone, Lighting, Gimbal & Shoots (60 Days / 2 Months).', icon: '📹', days: 60 },
-  { name: 'Social Media Marketing', price: 35000, desc: 'Instagram, YouTube, Google Ads & Monetization (60 Days / 2 Months).', icon: '📱', days: 60 },
-  { name: 'Combo 1: Video Editing + Graphic Designing', price: 30000, desc: '🔥 Popular Combo (Saved ₹10,000) - Graphic + Video Suite (90 Days / 3 Months).', icon: '🔥', isCombo: true, days: 90 },
-  { name: 'Combo 2: Video Editing + Cinematography & Film Making', price: 45000, desc: '🎬 Master Filmmaker Combo (Saved ₹10,000) - Shoot to Edit Pack (120 Days / 4 Months).', icon: '🎬', isCombo: true, days: 120 }
+  { name: 'Cinematography & Film Making', price: 35000, desc: 'Camera, Drone, Lighting, Gimbal & Shoots (45 Days / 1.5 Months).', icon: '📹', days: 45 },
+  { name: 'Social Media Marketing', price: 35000, desc: 'Instagram, YouTube, Google Ads & Monetization (45 Days / 1.5 Months).', icon: '📱', days: 45 },
+  { name: 'Combo 1: Video Editing + Graphic Designing', price: 30000, desc: '🔥 Popular Combo (Saved ₹10,000) - Graphic + Video Suite (45 Days / 1.5 Months).', icon: '🔥', isCombo: true, days: 45 },
+  { name: 'Combo 2: Video Editing + Cinematography & Film Making', price: 45000, desc: '🎬 Master Filmmaker Combo (Saved ₹10,000) - Shoot to Edit Pack (45 Days / 1.5 Months).', icon: '🎬', isCombo: true, days: 45 }
 ];
 
 // Helper to auto-calculate Batch End Date based on selected courses
@@ -102,6 +102,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState('all');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState('all'); // 'all', 'paid', 'pending'
   const [dateFilterType, setDateFilterType] = useState('all'); // 'all', 'today', '7days', '30days', 'this_month', 'custom'
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -831,7 +833,27 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       if (!matchesSearch) return false;
     }
 
-    // 2. Date Range Filter
+    // 2. Course Filter Dropdown
+    if (selectedCourseFilter !== 'all') {
+      const studentCourses = Array.isArray(s.courses) ? s.courses : [s.courses || ''];
+      const matchesCourse = studentCourses.some(c => c === selectedCourseFilter || c.includes(selectedCourseFilter) || selectedCourseFilter.includes(c));
+      if (!matchesCourse) return false;
+    }
+
+    // 3. Status Filter Dropdown (Paid / Pending)
+    if (selectedStatusFilter !== 'all') {
+      const totalFee = s.totalFee || 0;
+      const discount = s.discountAmount || 0;
+      const netFee = s.finalFee !== undefined ? s.finalFee : Math.max(0, totalFee - discount);
+      const paid = s.paidAmount || 0;
+      const pending = netFee - paid;
+      const isFullyPaid = pending <= 0;
+
+      if (selectedStatusFilter === 'paid' && !isFullyPaid) return false;
+      if (selectedStatusFilter === 'pending' && isFullyPaid) return false;
+    }
+
+    // 4. Date Range Filter
     if (dateFilterType === 'all') return true;
 
     const dateVal = s.createdAt || s.signatureDate;
@@ -1173,19 +1195,85 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
             flexWrap: 'wrap',
             gap: '1rem'
           }}>
-            <input
-              type="text"
-              placeholder="🔍 Search by name, ID, phone, or course..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '0.6rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                width: '320px',
-                fontSize: '0.9rem'
-              }}
-            />
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search by name, ID, phone, or course..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: '0.6rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  width: '260px',
+                  fontSize: '0.88rem'
+                }}
+              />
+
+              {/* Course Filter Dropdown */}
+              <select
+                value={selectedCourseFilter}
+                onChange={(e) => setSelectedCourseFilter(e.target.value)}
+                style={{
+                  padding: '0.55rem 0.85rem',
+                  borderRadius: '8px',
+                  border: selectedCourseFilter !== 'all' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                  backgroundColor: selectedCourseFilter !== 'all' ? '#eff6ff' : '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: selectedCourseFilter !== 'all' ? '#1d4ed8' : '#0f172a',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">🎓 All Courses</option>
+                {COURSE_OPTIONS.map(c => (
+                  <option key={c.name} value={c.name}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+
+              {/* Status Filter Dropdown */}
+              <select
+                value={selectedStatusFilter}
+                onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                style={{
+                  padding: '0.55rem 0.85rem',
+                  borderRadius: '8px',
+                  border: selectedStatusFilter !== 'all' ? '2px solid #16a34a' : '1px solid #cbd5e1',
+                  backgroundColor: selectedStatusFilter !== 'all' ? '#f0fdf4' : '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: selectedStatusFilter !== 'all' ? '#15803d' : '#0f172a',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">💳 All Status</option>
+                <option value="paid">✅ Fully Paid</option>
+                <option value="pending">⏳ Pending</option>
+              </select>
+
+              {(selectedCourseFilter !== 'all' || selectedStatusFilter !== 'all' || dateFilterType !== 'all' || searchTerm) && (
+                <button
+                  onClick={() => {
+                    setSelectedCourseFilter('all');
+                    setSelectedStatusFilter('all');
+                    setDateFilterType('all');
+                    setSearchTerm('');
+                  }}
+                  style={{
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid #fca5a5',
+                    background: '#fef2f2',
+                    color: '#dc2626',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Reset Filters
+                </button>
+              )}
+            </div>
 
             {/* Corner Calendar & Custom Date Range Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
@@ -1258,7 +1346,7 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
               border: '2px dashed #e2e8f0'
             }}>
               <h3>No Students Found</h3>
-              <p style={{ color: '#64748b' }}>Click "New Registration Form" to register your first student.</p>
+              <p style={{ color: '#64748b' }}>Try changing or resetting your search and filter criteria.</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
