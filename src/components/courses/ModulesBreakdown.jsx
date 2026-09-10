@@ -48,14 +48,6 @@ export const ModulesBreakdown = ({ triggerModal }) => {
             <p>Motion Graphics, Logo Animations, Keyframe styling, and Visual Effects.</p>
           </div>
 
-          <div className="module-card glass">
-            <div className="module-header-row">
-              <div className="module-badge">Module 5</div>
-              <Icons.Davinci />
-            </div>
-            <h3>DaVinci Resolve</h3>
-            <p>Professional Color Grading, primary and secondary wheels, node workflow layouts.</p>
-          </div>
 
         </div>
 

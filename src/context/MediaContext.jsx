@@ -34,8 +34,53 @@ export const useMedia = () => {
   return context;
 };
 
-// Config metadata for the admin panel (Empty by default for custom dynamic options)
-export const MEDIA_ITEMS = [];
+// Default media mapping
+const DEFAULT_MEDIA_MAP = {
+  heroWorkspace: heroWorkspaceDefault,
+  welcome1: welcome1Default,
+  welcome2: welcome2Default,
+  welcome3: welcome3Default,
+  welcome4: welcome4Default,
+  welcome5: welcome5Default,
+  welcome6: welcome6Default,
+  cinemaCameraImg: cinemaCameraImgDefault,
+  droneImg: droneImgDefault,
+  studioWorkstations: studioWorkstationsDefault,
+  founderRawalSingh: founderRawalSinghDefault,
+  aboutStory1: aboutStory1Default,
+  aboutStory2: aboutStory2Default,
+  course_graphic: courseGraphicDefault,
+  course_video: courseVideoDefault,
+  course_social: courseSocialDefault,
+  course_social_phone: courseSocialPhoneDefault,
+  course_performance: coursePerformanceDefault,
+  course_cinematography_1: courseCinematography1Default,
+  course_cinematography_2: courseCinematography2Default,
+};
+
+// Config metadata for the admin panel
+export const MEDIA_ITEMS = [
+  { key: 'heroWorkspace', default: heroWorkspaceDefault, label: 'Hero Workspace' },
+  { key: 'welcome1', default: welcome1Default, label: 'Welcome Slide 1' },
+  { key: 'welcome2', default: welcome2Default, label: 'Welcome Slide 2' },
+  { key: 'welcome3', default: welcome3Default, label: 'Welcome Slide 3' },
+  { key: 'welcome4', default: welcome4Default, label: 'Welcome Slide 4' },
+  { key: 'welcome5', default: welcome5Default, label: 'Welcome Slide 5' },
+  { key: 'welcome6', default: welcome6Default, label: 'Welcome Slide 6' },
+  { key: 'cinemaCameraImg', default: cinemaCameraImgDefault, label: 'Cinematography Camera' },
+  { key: 'droneImg', default: droneImgDefault, label: 'Cinematography Drone' },
+  { key: 'studioWorkstations', default: studioWorkstationsDefault, label: 'Studio Workstations' },
+  { key: 'founderRawalSingh', default: founderRawalSinghDefault, label: 'Founder Rawal Singh' },
+  { key: 'aboutStory1', default: aboutStory1Default, label: 'About Story 1' },
+  { key: 'aboutStory2', default: aboutStory2Default, label: 'About Story 2' },
+  { key: 'course_graphic', default: courseGraphicDefault, label: 'Course Graphic' },
+  { key: 'course_video', default: courseVideoDefault, label: 'Course Video' },
+  { key: 'course_social', default: courseSocialDefault, label: 'Course Social' },
+  { key: 'course_social_phone', default: courseSocialPhoneDefault, label: 'Course Social Phone' },
+  { key: 'course_performance', default: coursePerformanceDefault, label: 'Course Performance' },
+  { key: 'course_cinematography_1', default: courseCinematography1Default, label: 'Course Cinematography 1' },
+  { key: 'course_cinematography_2', default: courseCinematography2Default, label: 'Course Cinematography 2' },
+];
 
 const dbName = 'BawraMediaDB';
 const storeName = 'media';
@@ -117,7 +162,7 @@ const deleteFromDB = async (key) => {
 export const MediaProvider = ({ children }) => {
   const [media, setMedia] = useState(() => {
     // Generate initial state combining defaults & localStorage overrides
-    const initialMedia = {};
+    const initialMedia = { ...DEFAULT_MEDIA_MAP };
     MEDIA_ITEMS.forEach(item => {
       let stored = getItemSafe(`bawra_media_${item.key}`);
       // Bust old pen/book/unsplash course_graphic image to load the new custom user uploaded design monitor image
@@ -166,7 +211,9 @@ export const MediaProvider = ({ children }) => {
         removeItemSafe(`bawra_media_${item.key}`);
         stored = null;
       }
-      initialMedia[item.key] = stored || item.default;
+      if (stored) {
+        initialMedia[item.key] = stored;
+      }
     });
     return initialMedia;
   });
@@ -176,6 +223,7 @@ export const MediaProvider = ({ children }) => {
     const unsubscribe = subscribeSiteMedia((firestoreMedia) => {
       if (firestoreMedia && typeof firestoreMedia === 'object') {
         setMedia(prev => ({
+          ...DEFAULT_MEDIA_MAP,
           ...prev,
           ...firestoreMedia
         }));

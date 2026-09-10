@@ -1975,17 +1975,6 @@
   box-shadow: var(--shadow-premium);
 }
 
-.modules-grid-courses .module-card:last-child {
-  grid-column: span 2;
-  margin: 0 auto;
-  width: 100%;
-}
-
-@media (min-width: 769px) {
-  .modules-grid-courses .module-card:last-child {
-    max-width: 60%;
-  }
-}
 
 .module-card {
   padding: 2.5rem;

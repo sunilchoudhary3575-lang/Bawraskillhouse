@@ -104,10 +104,12 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all'); // 'all', 'paid', 'pending'
-  const [dateFilterType, setDateFilterType] = useState('all'); // 'all', 'today', '7days', '30days', 'this_month', 'custom'
+  const [dateFilterType, setDateFilterType] = useState('all'); // 'all', 'today', 'yesterday', 'single_day', '7days', '30days', 'this_month', 'custom'
+  const [singleFilterDate, setSingleFilterDate] = useState('');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [accountsDateFilterType, setAccountsDateFilterType] = useState('all'); // 'all', 'today', '7days', '30days', 'this_month', 'custom'
+  const [accountsDateFilterType, setAccountsDateFilterType] = useState('all'); // 'all', 'today', 'yesterday', 'single_day', '7days', '30days', 'this_month', 'custom'
+  const [accountsSingleFilterDate, setAccountsSingleFilterDate] = useState('');
   const [accountsCustomStartDate, setAccountsCustomStartDate] = useState('');
   const [accountsCustomEndDate, setAccountsCustomEndDate] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -867,6 +869,23 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       return studentDate >= todayStart;
     }
 
+    if (dateFilterType === 'yesterday') {
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+      const yesterdayEnd = new Date(todayStart);
+      yesterdayEnd.setMilliseconds(-1);
+      return studentDate >= yesterdayStart && studentDate <= yesterdayEnd;
+    }
+
+    if (dateFilterType === 'single_day') {
+      if (!singleFilterDate) return true;
+      const targetDate = parseDate(singleFilterDate);
+      if (!targetDate) return true;
+      const targetStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+      const targetEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+      return studentDate >= targetStart && studentDate <= targetEnd;
+    }
+
     if (dateFilterType === '7days') {
       const sevenDaysAgo = new Date(todayStart);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -985,6 +1004,23 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
     if (accountsDateFilterType === 'today') {
       return txDate >= todayStart;
+    }
+
+    if (accountsDateFilterType === 'yesterday') {
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+      const yesterdayEnd = new Date(todayStart);
+      yesterdayEnd.setMilliseconds(-1);
+      return txDate >= yesterdayStart && txDate <= yesterdayEnd;
+    }
+
+    if (accountsDateFilterType === 'single_day') {
+      if (!accountsSingleFilterDate) return true;
+      const targetDate = parseDate(accountsSingleFilterDate);
+      if (!targetDate) return true;
+      const targetStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+      const targetEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+      return txDate >= targetStart && txDate <= targetEnd;
     }
 
     if (accountsDateFilterType === '7days') {
@@ -1251,12 +1287,15 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                 <option value="pending">⏳ Pending</option>
               </select>
 
-              {(selectedCourseFilter !== 'all' || selectedStatusFilter !== 'all' || dateFilterType !== 'all' || searchTerm) && (
+              {(selectedCourseFilter !== 'all' || selectedStatusFilter !== 'all' || dateFilterType !== 'all' || singleFilterDate || customStartDate || customEndDate || searchTerm) && (
                 <button
                   onClick={() => {
                     setSelectedCourseFilter('all');
                     setSelectedStatusFilter('all');
                     setDateFilterType('all');
+                    setSingleFilterDate('');
+                    setCustomStartDate('');
+                    setCustomEndDate('');
                     setSearchTerm('');
                   }}
                   style={{
@@ -1283,25 +1322,63 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
               <select
                 value={dateFilterType}
-                onChange={(e) => setDateFilterType(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDateFilterType(val);
+                  if (val === 'single_day' && !singleFilterDate) {
+                    setSingleFilterDate(new Date().toISOString().split('T')[0]);
+                  }
+                }}
                 style={{
                   padding: '0.55rem 0.9rem',
                   borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: '#ffffff',
+                  border: dateFilterType !== 'all' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                  backgroundColor: dateFilterType !== 'all' ? '#eff6ff' : '#ffffff',
                   fontSize: '0.85rem',
                   fontWeight: '600',
-                  color: '#0f172a',
+                  color: dateFilterType !== 'all' ? '#1e40af' : '#0f172a',
                   cursor: 'pointer'
                 }}
               >
                 <option value="all">📅 All Time</option>
                 <option value="today">⚡ Today</option>
+                <option value="yesterday">⏪ Yesterday</option>
+                <option value="single_day">📆 Specific Date (Calendar)...</option>
                 <option value="7days">🗓️ Last 7 Days</option>
                 <option value="30days">🗓️ Last 30 Days</option>
                 <option value="this_month">📊 This Month</option>
                 <option value="custom">⚙️ Custom Date Range...</option>
               </select>
+
+              {dateFilterType === 'single_day' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: '#eff6ff',
+                  padding: '0.3rem 0.6rem',
+                  borderRadius: '8px',
+                  border: '1px solid #bfdbfe'
+                }}>
+                  <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: '700' }}>📆 Select Day:</span>
+                  <input
+                    type="date"
+                    value={singleFilterDate}
+                    onChange={(e) => setSingleFilterDate(e.target.value)}
+                    title="Select Individual Day from Calendar"
+                    style={{
+                      padding: '0.35rem 0.5rem',
+                      borderRadius: '6px',
+                      border: '1px solid #93c5fd',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      color: '#1e3a8a',
+                      backgroundColor: '#ffffff',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+              )}
 
               {dateFilterType === 'custom' && (
                 <div style={{
@@ -2006,25 +2083,63 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
 
             <select
               value={accountsDateFilterType}
-              onChange={(e) => setAccountsDateFilterType(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setAccountsDateFilterType(val);
+                if (val === 'single_day' && !accountsSingleFilterDate) {
+                  setAccountsSingleFilterDate(new Date().toISOString().split('T')[0]);
+                }
+              }}
               style={{
                 padding: '0.55rem 0.9rem',
                 borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
+                border: accountsDateFilterType !== 'all' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                backgroundColor: accountsDateFilterType !== 'all' ? '#eff6ff' : '#ffffff',
                 fontSize: '0.88rem',
                 fontWeight: '600',
-                color: '#0f172a',
+                color: accountsDateFilterType !== 'all' ? '#1e40af' : '#0f172a',
                 cursor: 'pointer'
               }}
             >
               <option value="all">📅 All Time Total</option>
               <option value="today">⚡ Today's Collections</option>
+              <option value="yesterday">⏪ Yesterday's Collections</option>
+              <option value="single_day">📆 Specific Date (Calendar)...</option>
               <option value="7days">🗓️ Last 7 Days</option>
               <option value="30days">🗓️ Last 30 Days</option>
               <option value="this_month">📊 This Month</option>
               <option value="custom">⚙️ Custom Date Range...</option>
             </select>
+
+            {accountsDateFilterType === 'single_day' && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: '#eff6ff',
+                padding: '0.35rem 0.7rem',
+                borderRadius: '8px',
+                border: '1px solid #bfdbfe'
+              }}>
+                <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: '700' }}>📆 Select Day:</span>
+                <input
+                  type="date"
+                  value={accountsSingleFilterDate}
+                  onChange={(e) => setAccountsSingleFilterDate(e.target.value)}
+                  title="Select Individual Day from Calendar"
+                  style={{
+                    padding: '0.35rem 0.5rem',
+                    borderRadius: '6px',
+                    border: '1px solid #93c5fd',
+                    fontSize: '0.82rem',
+                    fontWeight: '700',
+                    color: '#1e3a8a',
+                    backgroundColor: '#ffffff',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+            )}
 
             {accountsDateFilterType === 'custom' && (
               <div style={{
@@ -2051,6 +2166,29 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                   style={{ padding: '0.35rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
                 />
               </div>
+            )}
+
+            {(accountsDateFilterType !== 'all' || accountsSingleFilterDate || accountsCustomStartDate || accountsCustomEndDate) && (
+              <button
+                onClick={() => {
+                  setAccountsDateFilterType('all');
+                  setAccountsSingleFilterDate('');
+                  setAccountsCustomStartDate('');
+                  setAccountsCustomEndDate('');
+                }}
+                style={{
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #fca5a5',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Reset Filter
+              </button>
             )}
 
             <div style={{ marginLeft: 'auto', fontSize: '0.9rem', color: '#15803d', fontWeight: 'bold' }}>

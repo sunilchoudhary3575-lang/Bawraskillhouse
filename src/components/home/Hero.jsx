@@ -164,7 +164,6 @@ export const Hero = ({ triggerModal, showPreloader }) => {
               <div className="software-item-badge"><Icons.Illustrator /></div>
               <div className="software-item-badge"><Icons.Premiere /></div>
               <div className="software-item-badge"><Icons.AfterEffects /></div>
-              <div className="software-item-badge"><Icons.Davinci /></div>
             </div>
           </div>
         </div>
