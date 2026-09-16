@@ -2,14 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 
 export const TestimonialContent = ({ triggerModal, navigateTo }) => {
   const [playingVideoIndex, setPlayingVideoIndex] = useState(null);
-  const trackRef = useRef(null);
+  const trackRef1 = useRef(null);
+  const trackRef2 = useRef(null);
 
-  const scrollVideo = (direction) => {
-    if (trackRef.current) {
-      const { scrollLeft } = trackRef.current;
+  const scrollVideo = (ref, direction) => {
+    if (ref && ref.current) {
+      const { scrollLeft } = ref.current;
       const scrollAmount = 340; // Card width + gap
       const target = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-      trackRef.current.scrollTo({ left: target, behavior: 'smooth' });
+      ref.current.scrollTo({ left: target, behavior: 'smooth' });
     }
   };
 
@@ -60,15 +61,24 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
     };
   }, []);
 
-  const videoStories = [
+  const videoStoriesRow1 = [
     { id: 0, title: 'Transformation Story 1', youtubeId: 'zp9I0peykis', duration: '0:50' },
     { id: 1, title: 'Transformation Story 2', youtubeId: '1qg3ch0z0VU', duration: '0:45' },
     { id: 2, title: 'Transformation Story 3', youtubeId: 'yASTsyAB654', duration: '0:58' },
     { id: 3, title: 'Transformation Story 4', youtubeId: 'SAHI74b1M7M', duration: '0:40' },
     { id: 4, title: 'Transformation Story 5', youtubeId: 'NDbRbwHEME8', duration: '0:55' },
     { id: 5, title: 'Transformation Story 6', youtubeId: '3PptQptCYOg', duration: '0:50' },
-    { id: 6, title: 'Transformation Story 7', youtubeId: 'mzsOljOyQLI', duration: '0:48' },
-    { id: 7, title: 'Transformation Story 8', youtubeId: 'jXtyKGn752w', duration: '0:52' }
+    { id: 6, title: 'Transformation Story 7', youtubeId: 'mzsOljOyQLI', duration: '0:48' }
+  ];
+
+  const videoStoriesRow2 = [
+    { id: 7, title: 'Transformation Story 8', youtubeId: 'jXtyKGn752w', duration: '0:52' },
+    { id: 8, title: 'Transformation Story 9', youtubeId: 'IYLOfB25o1Y', duration: '0:50' },
+    { id: 9, title: 'Transformation Story 10', youtubeId: '9h9p7INmQvM', duration: '0:45' },
+    { id: 10, title: 'Transformation Story 11', youtubeId: 'iFhxfkC-qIU', duration: '0:58' },
+    { id: 11, title: 'Transformation Story 12', youtubeId: 'FIwjwDZZ0v8', duration: '0:40' },
+    { id: 12, title: 'Transformation Story 13', youtubeId: 'QEZYWHoaV4Q', duration: '0:55' },
+    { id: 13, title: 'Transformation Story 14', youtubeId: 'ABrY0wO4aQI', duration: '0:50' }
   ];
   return (
     <>
@@ -145,23 +155,78 @@ export const TestimonialContent = ({ triggerModal, navigateTo }) => {
             </p>
           </div>
 
-          {/* Video Carousel Wrapper */}
-          <div className="video-carousel-wrapper">
-            <button className="slider-arrow arrow-left" onClick={() => scrollVideo('left')} aria-label="Slide Left">‹</button>
-            <button className="slider-arrow arrow-right" onClick={() => scrollVideo('right')} aria-label="Slide Right">›</button>
+          {/* Row 1 Carousel */}
+          <div className="video-carousel-wrapper" style={{ marginBottom: '2.5rem' }}>
+            <button className="slider-arrow arrow-left" onClick={() => scrollVideo(trackRef1, 'left')} aria-label="Slide Left">‹</button>
+            <button className="slider-arrow arrow-right" onClick={() => scrollVideo(trackRef1, 'right')} aria-label="Slide Right">›</button>
 
-            <div ref={trackRef} className="video-carousel-track">
-              {videoStories.map((story, index) => {
-                const isPlaying = playingVideoIndex === index;
+            <div ref={trackRef1} className="video-carousel-track">
+              {videoStoriesRow1.map((story) => {
+                const isPlaying = playingVideoIndex === story.id;
                 return (
                   <div 
                     key={story.id} 
                     className={`video-story-card glass ${isPlaying ? 'video-playing' : ''}`}
                     onClick={() => {
                       if (isPlaying) {
-                        handlePauseVideo(index);
+                        handlePauseVideo(story.id);
                       } else {
-                        handlePlayVideo(index);
+                        handlePlayVideo(story.id);
+                      }
+                    }}
+                  >
+                    <div className="video-thumbnail-wrapper">
+                      {isPlaying ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${story.youtubeId}?autoplay=1&mute=0&rel=0&controls=0&modestbranding=1&iv_load_policy=3`}
+                          title={story.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                        ></iframe>
+                      ) : (
+                        <>
+                          <img 
+                            src={`https://img.youtube.com/vi/${story.youtubeId}/hqdefault.jpg`} 
+                            alt={story.title} 
+                            className="video-thumbnail-img"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
+                          />
+                          <div className="play-button-overlay">
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="play-icon-svg">
+                              <polygon points="8,5 19,12 8,19" />
+                            </svg>
+                          </div>
+                          <span className="video-duration">{story.duration}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Row 2 Carousel */}
+          <div className="video-carousel-wrapper">
+            <button className="slider-arrow arrow-left" onClick={() => scrollVideo(trackRef2, 'left')} aria-label="Slide Left">‹</button>
+            <button className="slider-arrow arrow-right" onClick={() => scrollVideo(trackRef2, 'right')} aria-label="Slide Right">›</button>
+
+            <div ref={trackRef2} className="video-carousel-track">
+              {videoStoriesRow2.map((story) => {
+                const isPlaying = playingVideoIndex === story.id;
+                return (
+                  <div 
+                    key={story.id} 
+                    className={`video-story-card glass ${isPlaying ? 'video-playing' : ''}`}
+                    onClick={() => {
+                      if (isPlaying) {
+                        handlePauseVideo(story.id);
+                      } else {
+                        handlePlayVideo(story.id);
                       }
                     }}
                   >
