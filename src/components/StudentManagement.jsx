@@ -457,6 +457,66 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     }
   };
 
+  // Handle WhatsApp Fee Reminder
+  const handleSendWhatsAppReminder = (e, std) => {
+    e.stopPropagation();
+
+    // 1. Extract and validate student phone number (must NOT use father's phone)
+    const rawMobile = std.mobile ? String(std.mobile).trim() : '';
+    const digitsOnly = rawMobile.replace(/\D/g, '');
+
+    let formattedPhone = '';
+    if (digitsOnly.length === 10) {
+      formattedPhone = `91${digitsOnly}`;
+    } else if (digitsOnly.length === 11 && digitsOnly.startsWith('0')) {
+      formattedPhone = `91${digitsOnly.slice(1)}`;
+    } else if (digitsOnly.length === 12 && digitsOnly.startsWith('91')) {
+      formattedPhone = digitsOnly;
+    } else if (digitsOnly.length > 10) {
+      formattedPhone = digitsOnly;
+    } else {
+      alert(`⚠️ Cannot send WhatsApp reminder: Invalid or missing mobile number for student "${std.fullName || 'Student'}". Registered phone: "${rawMobile || 'Not provided'}". Please provide a valid 10-digit student mobile number.`);
+      return;
+    }
+
+    // 2. Compute dynamic fee values from records
+    const studentName = std.fullName || 'Student';
+    const registrationId = std.registrationId || 'N/A';
+    const courseName = Array.isArray(std.courses)
+      ? (std.courses.length > 0 ? std.courses.join(', ') : 'N/A')
+      : (std.courses || 'N/A');
+    const totalFee = std.totalFee || 0;
+    const discount = std.discountAmount || 0;
+    const netFee = std.finalFee !== undefined ? std.finalFee : Math.max(0, totalFee - discount);
+    const paidAmount = std.paidAmount || 0;
+    const pendingAmount = netFee - paidAmount;
+
+    if (pendingAmount <= 0) {
+      alert(`Student "${studentName}" has no pending fees.`);
+      return;
+    }
+
+    // 3. Construct prefilled reminder message
+    const message = `Namaste ${studentName} ji,
+
+Bawra Skill House ki taraf se aapki pending fees ka reminder hai.
+
+Registration ID: ${registrationId}
+Course: ${courseName}
+Total Fees: ₹${totalFee.toLocaleString('en-IN')}
+Paid Amount: ₹${paidAmount.toLocaleString('en-IN')}
+Pending Amount: ₹${pendingAmount.toLocaleString('en-IN')}
+
+Kripya apni baki fees jald jama karwa dein. Agar aapne payment kar diya hai, toh payment receipt/screenshot share kar dein, taaki hum apna record update kar sakein.
+
+Dhanyavaad,
+Bawra Skill House`;
+
+    // 4. Encode message and open WhatsApp click-to-chat URL
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handlePrint = () => {
     setPrintingSingleReceiptId(null);
     const element = printRef.current;
@@ -1527,8 +1587,42 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
                             <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>₹0</span>
                           )}
                         </td>
-                        <td style={{ padding: '0.8rem 1rem', color: pending > 0 ? '#dc2626' : '#64748b', fontWeight: 'bold' }}>
-                          ₹{pending > 0 ? pending.toLocaleString() : '0'}
+                        <td style={{ padding: '0.8rem 1rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-start' }}>
+                            <span style={{ color: pending > 0 ? '#dc2626' : '#64748b', fontWeight: 'bold', fontSize: '0.95rem' }}>
+                              ₹{pending > 0 ? pending.toLocaleString() : '0'}
+                            </span>
+                            {pending > 0 && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleSendWhatsAppReminder(e, std)}
+                                title={`Send WhatsApp fee reminder to ${std.fullName || 'student'}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem',
+                                  backgroundColor: '#25D366',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '0.28rem 0.55rem',
+                                  fontSize: '0.74rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                                  transition: 'background-color 0.15s ease',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1ebc59'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#25D366'; }}
+                              >
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ flexShrink: 0 }}>
+                                  <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.054L2 22l5.077-1.331a9.92 9.92 0 004.93 1.314h.005c5.507 0 9.99-4.478 9.99-9.985 0-2.667-1.04-5.176-2.927-7.067A9.917 9.917 0 0012.012 2zm5.79 14.218c-.318.893-1.854 1.635-2.548 1.706-.63.065-1.442.087-2.31-.2-3.486-1.154-5.748-4.707-5.922-4.939-.174-.23-1.4-1.857-1.4-3.543 0-1.687.876-2.518 1.189-2.856.314-.338.69-.422.922-.422h.658c.209 0 .49-.079.76.571.272.656.927 2.27.994 2.413.072.143.12.308.024.492-.096.184-.144.298-.288.468-.144.17-.303.38-.432.51-.143.143-.293.298-.12.593.173.296.767 1.258 1.644 2.032.858.756 1.577.99 1.879 1.144.302.155.48.13.658-.078.18-.208.769-.894.975-1.2.206-.306.41-.255.69-.153.282.102 1.785.84 2.094.994.308.153.514.23.587.357.072.127.072.74-.246 1.633z"/>
+                                </svg>
+                                <span>Send Reminder</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '0.8rem 1rem' }}>
                           <span style={{
