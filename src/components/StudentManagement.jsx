@@ -8,6 +8,7 @@ import {
   deleteStudentFromFirebase,
   addPaymentInstallmentToFirebase
 } from '../services/firebaseAdminService';
+import { uploadStudentPhoto } from '../services/cloudinaryService';
 
 // Course Prices matching exact website pricing with duration in days
 export const COURSE_OPTIONS = [
@@ -119,6 +120,12 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   const [editingStudentId, setEditingStudentId] = useState(null);
   const printRef = useRef(null);
 
+  // Student Photo Upload State
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState(null);
+
   // New Registration Form Data
   const getInitialFormState = (currentStudents = students) => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -152,7 +159,9 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       paymentMode: 'Cash',
       receivedBy: 'Bawra Skill House',
       paymentNotes: 'Initial registration deposit',
-      adminInternalNotes: ''
+      adminInternalNotes: '',
+      studentPhotoUrl: '',
+      studentPhotoPublicId: ''
     };
   };
 
@@ -241,10 +250,59 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     }));
   };
 
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    // Allowed formats: JPG, JPEG, PNG, WEBP
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(ext)) {
+      const err = 'Invalid file format. Please select an image in JPG, JPEG, PNG, or WEBP format.';
+      setPhotoUploadError(err);
+      alert(err);
+      e.target.value = '';
+      return;
+    }
+
+    // Maximum size: 2 MB
+    const maxSizeBytes = 2 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      const err = 'File size exceeds 2 MB limit. Please select a photo smaller than 2 MB.';
+      setPhotoUploadError(err);
+      alert(err);
+      e.target.value = '';
+      return;
+    }
+
+    setPhotoUploadError(null);
+    setSelectedPhotoFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPhotoPreviewUrl(objectUrl);
+  };
+
+  const handleRemovePhoto = () => {
+    setSelectedPhotoFile(null);
+    setPhotoPreviewUrl('');
+    setPhotoUploadError(null);
+    setFormData(prev => ({
+      ...prev,
+      studentPhotoUrl: '',
+      studentPhotoPublicId: ''
+    }));
+    const fileInput = document.getElementById('studentPhotoInput');
+    if (fileInput) fileInput.value = '';
+  };
+
   const handleEditStudent = (std) => {
     if (!std) return;
     setEditingStudentId(std.id);
     setSelectedStudent(std);
+    setSelectedPhotoFile(null);
+    setPhotoPreviewUrl(std.studentPhotoUrl || '');
+    setPhotoUploadError(null);
     setFormData({
       fullName: std.fullName || '',
       guardianName: std.guardianName || '',
@@ -272,7 +330,9 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       paymentMode: std.paymentMode || 'Cash',
       receivedBy: std.receivedBy || 'Bawra Skill House',
       paymentNotes: std.paymentNotes || '',
-      adminInternalNotes: std.adminInternalNotes || ''
+      adminInternalNotes: std.adminInternalNotes || '',
+      studentPhotoUrl: std.studentPhotoUrl || '',
+      studentPhotoPublicId: std.studentPhotoPublicId || ''
     });
     setActiveSubTab('new');
   };
@@ -295,12 +355,33 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const paidNum = parseFloat(formData.paidAmount) || 0;
     const pendingBalance = finalFee - paidNum;
 
+    // Handle Cloudinary photo upload if a new photo file was selected
+    let uploadedPhotoUrl = formData.studentPhotoUrl || '';
+    let uploadedPhotoPublicId = formData.studentPhotoPublicId || '';
+
+    if (selectedPhotoFile) {
+      setIsUploadingPhoto(true);
+      try {
+        const uploadRes = await uploadStudentPhoto(selectedPhotoFile);
+        uploadedPhotoUrl = uploadRes.secure_url;
+        uploadedPhotoPublicId = uploadRes.public_id;
+      } catch (uploadErr) {
+        setIsUploadingPhoto(false);
+        const failMsg = uploadErr.message || 'Cloudinary photo upload failed. Please try again.';
+        setPhotoUploadError(failMsg);
+        alert(`❌ Photo Upload Failed: ${failMsg}\n\nStudent details were NOT saved. Please retry.`);
+        return; // Stop execution to prevent broken record save
+      }
+    }
+
     if (editingStudentId) {
       // EDIT EXISTING STUDENT MODE
       const existingStudent = students.find(s => s.id === editingStudentId) || {};
       const updatedStudent = {
         ...existingStudent,
         ...formData,
+        studentPhotoUrl: uploadedPhotoUrl,
+        studentPhotoPublicId: uploadedPhotoPublicId,
         totalFee: totalFeeNum,
         discountAmount: discountNum,
         finalFee: finalFee,
@@ -322,6 +403,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
       setStudents(updatedList);
       setSelectedStudent(updatedStudent);
       setEditingStudentId(null);
+      setSelectedPhotoFile(null);
+      setIsUploadingPhoto(false);
       setActiveSubTab('view_form');
       alert(`✅ Student "${updatedStudent.fullName}" registration details updated successfully!`);
       return;
@@ -330,6 +413,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     // CREATE NEW STUDENT MODE
     const newStudent = {
       ...formData,
+      studentPhotoUrl: uploadedPhotoUrl,
+      studentPhotoPublicId: uploadedPhotoPublicId,
       totalFee: totalFeeNum,
       discountAmount: discountNum,
       finalFee: finalFee,
@@ -363,6 +448,8 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
     const updated = [newStudent, ...students.filter(s => s.id !== newStudent.id)];
     setStudents(updated);
     setSelectedStudent(newStudent);
+    setSelectedPhotoFile(null);
+    setIsUploadingPhoto(false);
     setActiveSubTab('view_form');
     
     // Auto-trigger browser print / save PDF window
@@ -1165,6 +1252,9 @@ Bawra Skill House`;
           <button
             onClick={() => {
               setEditingStudentId(null);
+              setSelectedPhotoFile(null);
+              setPhotoPreviewUrl('');
+              setPhotoUploadError(null);
               setFormData(getInitialFormState(students));
               setActiveSubTab('new');
             }}
@@ -1527,7 +1617,46 @@ Bawra Skill House`;
                       >
                         <td style={{ padding: '0.8rem 0.6rem', textAlign: 'center', fontWeight: 'bold', color: '#64748b' }}>{idx + 1}</td>
                         <td style={{ padding: '0.8rem 1rem', fontWeight: 'bold', color: '#2563eb' }}>{std.registrationId}</td>
-                        <td style={{ padding: '0.8rem 1rem', fontWeight: '600' }}>{std.fullName}</td>
+                        <td style={{ padding: '0.8rem 1rem', fontWeight: '600' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {std.studentPhotoUrl ? (
+                              <img
+                                src={std.studentPhotoUrl}
+                                alt={std.fullName}
+                                style={{
+                                  width: '54px',
+                                  height: '54px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '2.5px solid #ff9a00',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                                  flexShrink: 0
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '54px',
+                                  height: '54px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#0a0e29',
+                                  color: '#ff9a00',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: '800',
+                                  fontSize: '1.25rem',
+                                  border: '2.5px solid #ff9a00',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {std.fullName ? std.fullName.charAt(0).toUpperCase() : 'S'}
+                              </div>
+                            )}
+                            <span style={{ fontSize: '0.95rem' }}>{std.fullName}</span>
+                          </div>
+                        </td>
                         <td style={{ padding: '0.8rem 1rem' }}>
                           <div style={{ fontWeight: '600' }}>{std.mobile}</div>
                           {(std.fatherMobile || std.whatsapp) && (
@@ -1718,6 +1847,9 @@ Bawra Skill House`;
                 type="button"
                 onClick={() => {
                   setEditingStudentId(null);
+                  setSelectedPhotoFile(null);
+                  setPhotoPreviewUrl('');
+                  setPhotoUploadError(null);
                   setFormData(getInitialFormState(students));
                   setActiveSubTab('list');
                 }}
@@ -1747,6 +1879,97 @@ Bawra Skill House`;
               1. STUDENT INFORMATION
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+              {/* Student Photo Upload Field */}
+              <div style={{ gridColumn: 'span 2', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                <label style={{ fontWeight: '600', fontSize: '0.88rem', color: '#0a0e29', display: 'block', marginBottom: '0.5rem' }}>
+                  📷 Student Photo (Optional)
+                  <span style={{ fontWeight: 'normal', fontSize: '0.78rem', color: '#64748b', marginLeft: '0.5rem' }}>
+                    (Allowed formats: JPG, JPEG, PNG, WEBP — Max size: 2 MB)
+                  </span>
+                </label>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {photoPreviewUrl ? (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <img
+                        src={photoPreviewUrl}
+                        alt="Student Preview"
+                        style={{
+                          width: '85px',
+                          height: '85px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '3px solid #ff9a00',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        title="Remove Photo"
+                        style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          backgroundColor: '#dc2626',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: '85px',
+                      height: '85px',
+                      borderRadius: '50%',
+                      backgroundColor: '#e2e8f0',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '1.8rem',
+                      border: '2px dashed #94a3b8'
+                    }}>
+                      👤
+                    </div>
+                  )}
+
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <input
+                      type="file"
+                      id="studentPhotoInput"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handlePhotoSelect}
+                      disabled={isUploadingPhoto}
+                      style={{
+                        fontSize: '0.85rem',
+                        color: '#334155'
+                      }}
+                    />
+                    {photoUploadError && (
+                      <div style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.3rem', fontWeight: 'bold' }}>
+                        ⚠️ {photoUploadError}
+                      </div>
+                    )}
+                    {selectedPhotoFile && !photoUploadError && (
+                      <div style={{ color: '#16a34a', fontSize: '0.78rem', marginTop: '0.3rem', fontWeight: '600' }}>
+                        ✅ Photo selected: {selectedPhotoFile.name} ({(selectedPhotoFile.size / 1024).toFixed(1)} KB)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div>
                 <label style={{ fontWeight: '600', fontSize: '0.85rem' }}>Full Name *</label>
                 <input
@@ -2107,20 +2330,24 @@ Bawra Skill House`;
 
             <button
               type="submit"
+              disabled={isUploadingPhoto}
               style={{
                 width: '100%',
                 padding: '0.9rem',
-                backgroundColor: editingStudentId ? '#d97706' : '#0a0e29',
+                backgroundColor: isUploadingPhoto ? '#64748b' : (editingStudentId ? '#d97706' : '#0a0e29'),
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
                 fontSize: '1rem',
-                cursor: 'pointer',
-                boxShadow: editingStudentId ? '0 4px 12px rgba(217, 119, 6, 0.3)' : 'none'
+                cursor: isUploadingPhoto ? 'not-allowed' : 'pointer',
+                opacity: isUploadingPhoto ? 0.75 : 1,
+                boxShadow: editingStudentId && !isUploadingPhoto ? '0 4px 12px rgba(217, 119, 6, 0.3)' : 'none'
               }}
             >
-              {editingStudentId ? '💾 Save & Update Student Details' : '✨ Generate Official Registration Form'}
+              {isUploadingPhoto
+                ? '⏳ Uploading Photo to Cloudinary...'
+                : (editingStudentId ? '💾 Save & Update Student Details' : '✨ Generate Official Registration Form')}
             </button>
           </form>
         </div>
@@ -2788,57 +3015,113 @@ Bawra Skill House`;
                   STUDENT INFORMATION
                 </div>
 
-                <div className="grid-2col">
-                  <div className="underline-row">
-                    <span className="underline-label">Full Name:</span>
-                    <span className="underline-val">{selectedStudent.fullName}</span>
-                  </div>
-                  <div className="underline-row">
-                    <span className="underline-label">Father's / Guardian's Name:</span>
-                    <span className="underline-val">{selectedStudent.guardianName || '—'}</span>
-                  </div>
-                </div>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginTop: '6px' }}>
+                  {/* Left Side: Fields Grid */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="grid-2col">
+                      <div className="underline-row">
+                        <span className="underline-label">Full Name:</span>
+                        <span className="underline-val">{selectedStudent.fullName}</span>
+                      </div>
+                      <div className="underline-row">
+                        <span className="underline-label">Father's / Guardian's Name:</span>
+                        <span className="underline-val">{selectedStudent.guardianName || '—'}</span>
+                      </div>
+                    </div>
 
-                <div className="grid-2col">
-                  <div className="underline-row">
-                    <span className="underline-label">Date of Birth:</span>
-                    <span className="underline-val">{selectedStudent.dob || '—'}</span>
+                    <div className="grid-2col">
+                      <div className="underline-row">
+                        <span className="underline-label">Date of Birth:</span>
+                        <span className="underline-val">{selectedStudent.dob || '—'}</span>
+                      </div>
+                      <div className="underline-row">
+                        <span className="underline-label">Gender:</span>
+                        <span style={{ display: 'flex', gap: '15px', alignItems: 'center', fontSize: '0.85rem' }}>
+                          <label><input type="radio" checked={selectedStudent.gender === 'Male'} readOnly /> Male</label>
+                          <label><input type="radio" checked={selectedStudent.gender === 'Female'} readOnly /> Female</label>
+                          <label><input type="radio" checked={selectedStudent.gender === 'Other'} readOnly /> Other</label>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid-2col">
+                      <div className="underline-row">
+                        <span className="underline-label">Mobile Number:</span>
+                        <span className="underline-val">{selectedStudent.mobile}</span>
+                      </div>
+                      <div className="underline-row">
+                        <span className="underline-label">Father's Mobile No.:</span>
+                        <span className="underline-val">{selectedStudent.fatherMobile || selectedStudent.whatsapp || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid-2col">
+                      <div className="underline-row">
+                        <span className="underline-label">Email Address:</span>
+                        <span className="underline-val">{selectedStudent.email || '—'}</span>
+                      </div>
+                      <div className="underline-row">
+                        <span className="underline-label">City / District:</span>
+                        <span className="underline-val" style={{ fontWeight: 'bold' }}>{selectedStudent.city || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="underline-row" style={{ marginBottom: 0 }}>
+                      <span className="underline-label">Address:</span>
+                      <span className="underline-val">{selectedStudent.address || '—'}</span>
+                    </div>
                   </div>
-                  <div className="underline-row">
-                    <span className="underline-label">Gender:</span>
-                    <span style={{ display: 'flex', gap: '15px', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <label><input type="radio" checked={selectedStudent.gender === 'Male'} readOnly /> Male</label>
-                      <label><input type="radio" checked={selectedStudent.gender === 'Female'} readOnly /> Female</label>
-                      <label><input type="radio" checked={selectedStudent.gender === 'Other'} readOnly /> Other</label>
+
+                  {/* Right Side: Passport Photo Box */}
+                  <div
+                    className="printable-photo-box"
+                    style={{
+                      width: '90px',
+                      flexShrink: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      marginTop: '2px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '90px',
+                        height: '110px',
+                        border: '1.5px solid #0a0e29',
+                        borderRadius: '4px',
+                        backgroundColor: '#f8fafc',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      {selectedStudent.studentPhotoUrl ? (
+                        <img
+                          src={selectedStudent.studentPhotoUrl}
+                          alt={selectedStudent.fullName}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '4px' }}>
+                          <div style={{ fontSize: '1.8rem', lineHeight: '1' }}>👤</div>
+                          <span style={{ fontSize: '0.62rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginTop: '4px' }}>
+                            Affix Photo
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#475569', marginTop: '3px', textAlign: 'center' }}>
+                      Student Photo
                     </span>
                   </div>
-                </div>
-
-                <div className="grid-2col">
-                  <div className="underline-row">
-                    <span className="underline-label">Mobile Number:</span>
-                    <span className="underline-val">{selectedStudent.mobile}</span>
-                  </div>
-                  <div className="underline-row">
-                    <span className="underline-label">Father's Mobile No.:</span>
-                    <span className="underline-val">{selectedStudent.fatherMobile || selectedStudent.whatsapp || '—'}</span>
-                  </div>
-                </div>
-
-                <div className="grid-2col">
-                  <div className="underline-row">
-                    <span className="underline-label">Email Address:</span>
-                    <span className="underline-val">{selectedStudent.email || '—'}</span>
-                  </div>
-                  <div className="underline-row">
-                    <span className="underline-label">City / District:</span>
-                    <span className="underline-val" style={{ fontWeight: 'bold' }}>{selectedStudent.city || '—'}</span>
-                  </div>
-                </div>
-
-                <div className="underline-row">
-                  <span className="underline-label">Address:</span>
-                  <span className="underline-val">{selectedStudent.address || '—'}</span>
                 </div>
               </div>
 
@@ -3136,19 +3419,54 @@ Bawra Skill House`;
       {/* ================= 4. STUDENT FEE & ACCOUNT PROFILE ================= */}
       {activeSubTab === 'view_student' && selectedStudent && (
         <div className="no-print" style={{ background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-            <div>
-              <h2 style={{ margin: 0, color: '#0a0e29' }}>{selectedStudent.fullName}</h2>
-              <div style={{ color: '#64748b', fontSize: '0.88rem', marginTop: '0.3rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span>ID: <strong style={{ color: '#2563eb' }}>{selectedStudent.registrationId}</strong></span>
-                <span>• Phone: <strong>{selectedStudent.mobile}</strong></span>
-                {(selectedStudent.fatherMobile || selectedStudent.whatsapp) && (
-                  <span>• Father's: <strong>{selectedStudent.fatherMobile || selectedStudent.whatsapp}</strong></span>
-                )}
-                {selectedStudent.city && <span>• City: <strong style={{ color: '#0369a1' }}>📍 {selectedStudent.city}</strong></span>}
-                <span>• Batch: <strong>{selectedStudent.batchAssigned || 'Regular'}</strong></span>
-                {selectedStudent.batchStartDate && <span>• Start: <strong>{selectedStudent.batchStartDate}</strong></span>}
-                {selectedStudent.batchEndDate && <span>• End: <strong style={{ color: '#e11d48' }}>{selectedStudent.batchEndDate}</strong></span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+              {selectedStudent.studentPhotoUrl ? (
+                <img
+                  src={selectedStudent.studentPhotoUrl}
+                  alt={selectedStudent.fullName}
+                  style={{
+                    width: '104px',
+                    height: '104px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3.5px solid #ff9a00',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)'
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '104px',
+                    height: '104px',
+                    borderRadius: '50%',
+                    backgroundColor: '#0a0e29',
+                    color: '#ff9a00',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '700',
+                    fontSize: '2.5rem',
+                    border: '3.5px solid #ff9a00',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  {selectedStudent.fullName ? selectedStudent.fullName.charAt(0).toUpperCase() : 'S'}
+                </div>
+              )}
+              <div>
+                <h2 style={{ margin: 0, color: '#0a0e29' }}>{selectedStudent.fullName}</h2>
+                <div style={{ color: '#64748b', fontSize: '0.88rem', marginTop: '0.3rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span>ID: <strong style={{ color: '#2563eb' }}>{selectedStudent.registrationId}</strong></span>
+                  <span>• Phone: <strong>{selectedStudent.mobile}</strong></span>
+                  {(selectedStudent.fatherMobile || selectedStudent.whatsapp) && (
+                    <span>• Father's: <strong>{selectedStudent.fatherMobile || selectedStudent.whatsapp}</strong></span>
+                  )}
+                  {selectedStudent.city && <span>• City: <strong style={{ color: '#0369a1' }}>📍 {selectedStudent.city}</strong></span>}
+                  <span>• Batch: <strong>{selectedStudent.batchAssigned || 'Regular'}</strong></span>
+                  {selectedStudent.batchStartDate && <span>• Start: <strong>{selectedStudent.batchStartDate}</strong></span>}
+                  {selectedStudent.batchEndDate && <span>• End: <strong style={{ color: '#e11d48' }}>{selectedStudent.batchEndDate}</strong></span>}
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
