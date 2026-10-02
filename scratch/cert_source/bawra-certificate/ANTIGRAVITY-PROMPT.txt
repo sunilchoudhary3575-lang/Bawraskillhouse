@@ -1,0 +1,11 @@
+Integrate the supplied Bawra Skill House certificate source into the existing admin panel. This is a finished template: reuse its files, coordinates, original artwork and fonts. Do not recreate or approximate the design.
+
+1. Inspect the current certificate component and replace only its visual template with BawraCertificate.jsx (React + Vite), certificate-fragment.html, certificate.css, certificate.js and the assets folder. Adapt imports if the project uses another build tool. Do not import the demo styles.css into the admin UI.
+2. Bind studentName and courseName to the currently selected student from the existing database. Bind duration and issueDate to the existing certificate form. Retain existing certificate metadata and issuance permissions.
+3. Keep the decorative artwork as one full-artboard layer and SVG text as the second full-artboard layer. Both must occupy exactly the same bounds. The cleaned artwork contains no old student fields and MUST be used. Do not substitute the original filled certificate screenshot.
+4. Preserve the SVG viewBox, all fixed text positions, colours, typography and single-line fit logic. Only the complete artboard scales with the preview width; individual items must never reflow.
+5. Use a dedicated print route or isolated document for export. Set @page to A4 landscape, margin 0. Await images, document.fonts and the certificate controller's ready promise before printing or server PDF generation. Hide all admin controls in print. Do not use html2canvas for the text layer.
+6. Do not change student registration, Firebase configuration, fees, reminders, WhatsApp, navigation or ID cards. This deliverable is the certificate design only.
+7. Validate desktop and narrow preview, a long student name, a long course, date changes and a one-page A4 landscape PDF. Compare against the included preview and original reference before completion.
+
+The standalone index.html is a working demonstration. Follow README.md for implementation details.

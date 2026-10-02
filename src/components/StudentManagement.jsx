@@ -9,6 +9,7 @@ import {
   addPaymentInstallmentToFirebase
 } from '../services/firebaseAdminService';
 import { uploadStudentPhoto } from '../services/cloudinaryService';
+import StudentDocumentsModule from './documents/StudentDocumentsModule';
 
 // Course Prices matching exact website pricing with duration in days
 export const COURSE_OPTIONS = [
@@ -1270,6 +1271,20 @@ Bawra Skill House`;
           >
             ➕ New Registration Form
           </button>
+          <button
+            onClick={() => setActiveSubTab('documents')}
+            style={{
+              padding: '0.6rem 1.2rem',
+              borderRadius: '8px',
+              border: activeSubTab === 'documents' ? 'none' : '1px solid #cbd5e1',
+              backgroundColor: activeSubTab === 'documents' ? '#2563eb' : '#ffffff',
+              color: activeSubTab === 'documents' ? '#ffffff' : '#334155',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            📄 Documents & Certificates
+          </button>
           {userRole === 'superadmin' && (
             <button
               onClick={() => setActiveSubTab('accounts')}
@@ -1307,6 +1322,21 @@ Bawra Skill House`;
               title="Edit registration details for selected student"
             >
               ✏️ Edit Form
+            </button>
+            <button
+              onClick={() => setActiveSubTab('documents')}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                border: activeSubTab === 'documents' ? 'none' : '1px solid #cbd5e1',
+                background: activeSubTab === 'documents' ? '#2563eb' : '#eff6ff',
+                color: activeSubTab === 'documents' ? '#fff' : '#1d4ed8',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+              title="Generate ID Card or Certificate for selected student"
+            >
+              🎓 ID Card & Certificate
             </button>
             <button
               onClick={() => setActiveSubTab('view_form')}
@@ -1767,6 +1797,30 @@ Bawra Skill House`;
                         </td>
                         <td style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>
                           <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedStudent(std);
+                                setActiveSubTab('documents');
+                              }}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                border: '1px solid #bfdbfe',
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                              }}
+                              title="Generate Student ID Card & Course Certificate"
+                            >
+                              📄
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -4220,6 +4274,15 @@ Bawra Skill House`;
           </div>
         );
       })()}
+
+      {/* ================= 6. STUDENT DOCUMENTS & CERTIFICATES MODULE ================= */}
+      {activeSubTab === 'documents' && (
+        <StudentDocumentsModule
+          students={students}
+          selectedStudent={selectedStudent}
+          setSelectedStudent={setSelectedStudent}
+        />
+      )}
 
       {/* Payment Installment Modal */}
       {showPaymentModal && (

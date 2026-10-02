@@ -59,7 +59,7 @@ export const subscribeStudents = (callback) => {
     });
   } catch (err) {
     console.warn('Failed to subscribe to students collection:', err);
-    return () => {};
+    return () => { };
   }
 };
 
@@ -193,7 +193,7 @@ export const subscribeLeads = (callback) => {
     };
   } catch (err) {
     console.warn('Failed to subscribe leads:', err);
-    return () => {};
+    return () => { };
   }
 };
 
@@ -256,7 +256,7 @@ export const subscribeAdminOptions = (callback) => {
     });
   } catch (err) {
     console.warn('Failed to subscribe admin custom options:', err);
-    return () => {};
+    return () => { };
   }
 };
 
@@ -330,7 +330,7 @@ export const subscribeSiteMedia = (callback) => {
     });
   } catch (err) {
     console.warn('Failed to subscribe site media:', err);
-    return () => {};
+    return () => { };
   }
 };
 
@@ -351,3 +351,34 @@ export const updateSiteMediaInFirebase = async (key, urlValue) => {
     throw err;
   }
 };
+
+/**
+ * Save generated Certificate metadata to Firestore
+ * @param {Object} certData 
+ * @returns {Promise<string>} Document ID
+ */
+export const saveCertificateMetadataInFirebase = async (certData) => {
+  try {
+    const docRef = await addDoc(collection(db, 'generatedCertificates'), {
+      ...certData,
+      generatedAt: certData.generatedAt || new Date().toISOString()
+    });
+    // Also attach to student record
+    if (certData.studentId) {
+      const studentRef = doc(db, 'students', certData.studentId);
+      await updateDoc(studentRef, {
+        lastCertificateGenerated: {
+          certificateNumber: certData.certificateNumber,
+          issueDate: certData.issueDate,
+          courseName: certData.courseName,
+          generatedAt: certData.generatedAt || new Date().toISOString()
+        }
+      }).catch(err => console.warn('Student record cert link notice:', err));
+    }
+    return docRef.id;
+  } catch (err) {
+    console.error('Error saving certificate metadata in Firestore:', err);
+    throw err;
+  }
+};
+
