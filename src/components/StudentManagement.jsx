@@ -6,7 +6,9 @@ import {
   addStudentToFirebase,
   updateStudentInFirebase,
   deleteStudentFromFirebase,
-  addPaymentInstallmentToFirebase
+  addPaymentInstallmentToFirebase,
+  terminateStudentInFirebase,
+  reactivateStudentInFirebase
 } from '../services/firebaseAdminService';
 import { uploadStudentPhoto } from '../services/cloudinaryService';
 import StudentDocumentsModule from './documents/StudentDocumentsModule';
@@ -120,6 +122,29 @@ export const StudentManagement = ({ userRole = 'superadmin' }) => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [editingStudentId, setEditingStudentId] = useState(null);
   const printRef = useRef(null);
+
+  // Termination & Reactivation Modal States
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
+  const [studentToTerminate, setStudentToTerminate] = useState(null);
+  const [terminationForm, setTerminationForm] = useState({
+    effectiveDate: new Date().toISOString().split('T')[0],
+    reason: '',
+    notes: ''
+  });
+
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
+  const [studentToReactivate, setStudentToReactivate] = useState(null);
+  const [reactivationForm, setReactivationForm] = useState({
+    notes: ''
+  });
+
+  // Terminated Students Filter States
+  const [terminatedSearchTerm, setTerminatedSearchTerm] = useState('');
+  const [terminatedCourseFilter, setTerminatedCourseFilter] = useState('all');
+  const [terminatedDateFilterType, setTerminatedDateFilterType] = useState('all');
+  const [terminatedSingleDate, setTerminatedSingleDate] = useState('');
+  const [terminatedStartDate, setTerminatedStartDate] = useState('');
+  const [terminatedEndDate, setTerminatedEndDate] = useState('');
 
   // Student Photo Upload State
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
@@ -969,7 +994,171 @@ Bawra Skill House`;
     }
   };
 
-  const filteredStudents = students.filter(s => {
+  // Separate Active and Terminated Students
+  const activeStudents = students.filter(s => !s.lifecycleStatus || s.lifecycleStatus === 'active');
+  const terminatedStudents = students.filter(s => s.lifecycleStatus === 'terminated');
+
+  // Termination Handlers
+  const handleOpenTerminateModal = (std) => {
+    if (!std) return;
+    if (std.lifecycleStatus === 'terminated') {
+      alert(`Student "${std.fullName}" is already terminated.`);
+      return;
+    }
+    setStudentToTerminate(std);
+    setTerminationForm({
+      effectiveDate: new Date().toISOString().split('T')[0],
+      reason: '',
+      notes: ''
+    });
+    setShowTerminateModal(true);
+  };
+
+  const handleConfirmTermination = async () => {
+    if (!studentToTerminate) return;
+    if (!terminationForm.reason.trim()) {
+      alert('Please enter a termination reason (required).');
+      return;
+    }
+
+    if (studentToTerminate.lifecycleStatus === 'terminated') {
+      alert('Student is already terminated.');
+      setShowTerminateModal(false);
+      return;
+    }
+
+    const totalFeeNum = studentToTerminate.totalFee || 0;
+    const discountNum = studentToTerminate.discountAmount || 0;
+    const finalFee = studentToTerminate.finalFee !== undefined ? studentToTerminate.finalFee : Math.max(0, totalFeeNum - discountNum);
+    const paidNum = studentToTerminate.paidAmount || 0;
+    const pendingBalance = Math.max(0, finalFee - paidNum);
+
+    const effectiveDate = terminationForm.effectiveDate || new Date().toISOString().split('T')[0];
+    const adminIdentity = userRole === 'superadmin' ? 'Super Admin' : 'Admin';
+
+    const historyEntry = {
+      id: `term_${Date.now()}`,
+      action: 'terminated',
+      effectiveDate: effectiveDate,
+      timestamp: new Date().toISOString(),
+      reason: terminationForm.reason.trim(),
+      notes: terminationForm.notes.trim(),
+      adminBy: adminIdentity,
+      feeSnapshot: {
+        totalFee: totalFeeNum,
+        discountAmount: discountNum,
+        finalFee: finalFee,
+        paidAmount: paidNum,
+        pendingBalance: pendingBalance
+      }
+    };
+
+    const updatedHistory = [...(studentToTerminate.terminationHistory || []), historyEntry];
+
+    const updatedStudent = {
+      ...studentToTerminate,
+      lifecycleStatus: 'terminated',
+      terminatedAt: new Date().toISOString(),
+      terminationEffectiveDate: effectiveDate,
+      terminationReason: terminationForm.reason.trim(),
+      terminationNotes: terminationForm.notes.trim(),
+      terminatedBy: adminIdentity,
+      terminationHistory: updatedHistory,
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedList = students.map(s => s.id === studentToTerminate.id ? updatedStudent : s);
+    setStudents(updatedList);
+    setSelectedStudent(updatedStudent);
+
+    try {
+      await updateStudentInFirebase(studentToTerminate.id, updatedStudent);
+    } catch (err) {
+      console.warn('Firestore termination update notice:', err);
+    }
+
+    setShowTerminateModal(false);
+    setStudentToTerminate(null);
+    alert(`🛑 Student "${updatedStudent.fullName}" (${updatedStudent.registrationId}) has been terminated and moved to Terminated Students.`);
+  };
+
+  // Reactivation Handlers
+  const handleOpenReactivateModal = (std) => {
+    if (!std) return;
+    if (std.lifecycleStatus === 'active' || !std.lifecycleStatus) {
+      alert(`Student "${std.fullName}" is already active.`);
+      return;
+    }
+    setStudentToReactivate(std);
+    setReactivationForm({ notes: '' });
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmReactivation = async () => {
+    if (!studentToReactivate) return;
+
+    if (studentToReactivate.lifecycleStatus === 'active') {
+      alert('Student is already active.');
+      setShowReactivateModal(false);
+      return;
+    }
+
+    const totalFeeNum = studentToReactivate.totalFee || 0;
+    const discountNum = studentToReactivate.discountAmount || 0;
+    const finalFee = studentToReactivate.finalFee !== undefined ? studentToReactivate.finalFee : Math.max(0, totalFeeNum - discountNum);
+    const paidNum = studentToReactivate.paidAmount || 0;
+    const pendingBalance = Math.max(0, finalFee - paidNum);
+
+    const effectiveDate = new Date().toISOString().split('T')[0];
+    const adminIdentity = userRole === 'superadmin' ? 'Super Admin' : 'Admin';
+
+    const historyEntry = {
+      id: `react_${Date.now()}`,
+      action: 'reactivated',
+      effectiveDate: effectiveDate,
+      timestamp: new Date().toISOString(),
+      notes: reactivationForm.notes.trim(),
+      adminBy: adminIdentity,
+      feeSnapshot: {
+        totalFee: totalFeeNum,
+        discountAmount: discountNum,
+        finalFee: finalFee,
+        paidAmount: paidNum,
+        pendingBalance: pendingBalance
+      }
+    };
+
+    const updatedHistory = [...(studentToReactivate.terminationHistory || []), historyEntry];
+
+    const updatedStudent = {
+      ...studentToReactivate,
+      lifecycleStatus: 'active',
+      terminatedAt: null,
+      terminationEffectiveDate: null,
+      terminationReason: null,
+      terminationNotes: null,
+      terminatedBy: null,
+      terminationHistory: updatedHistory,
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedList = students.map(s => s.id === studentToReactivate.id ? updatedStudent : s);
+    setStudents(updatedList);
+    setSelectedStudent(updatedStudent);
+
+    try {
+      await updateStudentInFirebase(studentToReactivate.id, updatedStudent);
+    } catch (err) {
+      console.warn('Firestore reactivation update notice:', err);
+    }
+
+    setShowReactivateModal(false);
+    setStudentToReactivate(null);
+    alert(`✅ Student "${updatedStudent.fullName}" (${updatedStudent.registrationId}) has been reactivated and returned to Active Student Directory.`);
+  };
+
+  // 1. Filter Active Students for Active Directory
+  const filteredStudents = activeStudents.filter(s => {
     // 1. Text & Course search filter
     const q = searchTerm.toLowerCase().trim();
     if (q) {
@@ -1078,12 +1267,122 @@ Bawra Skill House`;
     return (b.registrationId || '').localeCompare(a.registrationId || '', undefined, { numeric: true, sensitivity: 'base' });
   });
 
+  // 2. Filter Terminated Students for Terminated Folder
+  const filteredTerminatedStudents = terminatedStudents.filter(s => {
+    const q = terminatedSearchTerm.toLowerCase().trim();
+    if (q) {
+      const coursesStr = (Array.isArray(s.courses) ? s.courses.join(' ') : (s.courses || '')).toLowerCase();
+      const matchesSearch = (
+        (s.fullName || '').toLowerCase().includes(q) ||
+        (s.registrationId || '').toLowerCase().includes(q) ||
+        (s.mobile || '').includes(q) ||
+        coursesStr.includes(q)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    if (terminatedCourseFilter !== 'all') {
+      const studentCourses = Array.isArray(s.courses) ? s.courses : [s.courses || ''];
+      const matchesCourse = studentCourses.some(c => c === terminatedCourseFilter || c.includes(terminatedCourseFilter) || terminatedCourseFilter.includes(c));
+      if (!matchesCourse) return false;
+    }
+
+    if (terminatedDateFilterType === 'all') return true;
+
+    const dateVal = s.terminationEffectiveDate || s.terminatedAt || s.createdAt;
+    const termDate = parseDate(dateVal);
+    if (!termDate) return false;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (terminatedDateFilterType === 'today') {
+      return termDate >= todayStart;
+    }
+
+    if (terminatedDateFilterType === 'yesterday') {
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+      const yesterdayEnd = new Date(todayStart);
+      yesterdayEnd.setMilliseconds(-1);
+      return termDate >= yesterdayStart && termDate <= yesterdayEnd;
+    }
+
+    if (terminatedDateFilterType === 'single_day') {
+      if (!terminatedSingleDate) return true;
+      const targetDate = parseDate(terminatedSingleDate);
+      if (!targetDate) return true;
+      const targetStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+      const targetEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+      return termDate >= targetStart && termDate <= targetEnd;
+    }
+
+    if (terminatedDateFilterType === '7days') {
+      const sevenDaysAgo = new Date(todayStart);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      return termDate >= sevenDaysAgo;
+    }
+
+    if (terminatedDateFilterType === '30days') {
+      const thirtyDaysAgo = new Date(todayStart);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return termDate >= thirtyDaysAgo;
+    }
+
+    if (terminatedDateFilterType === 'this_month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      return termDate >= monthStart;
+    }
+
+    if (terminatedDateFilterType === 'custom') {
+      if (terminatedStartDate) {
+        const start = parseDate(terminatedStartDate);
+        if (start) {
+          start.setHours(0, 0, 0, 0);
+          if (termDate < start) return false;
+        }
+      }
+      if (terminatedEndDate) {
+        const end = parseDate(terminatedEndDate);
+        if (end) {
+          end.setHours(23, 59, 59, 999);
+          if (termDate > end) return false;
+        }
+      }
+      return true;
+    }
+
+    return true;
+  }).sort((a, b) => {
+    const timeA = (parseDate(a.terminationEffectiveDate) || parseDate(a.terminatedAt) || new Date(0)).getTime();
+    const timeB = (parseDate(b.terminationEffectiveDate) || parseDate(b.terminatedAt) || new Date(0)).getTime();
+    const diff = timeB - timeA;
+    if (diff !== 0) return diff;
+    return (b.registrationId || '').localeCompare(a.registrationId || '', undefined, { numeric: true, sensitivity: 'base' });
+  });
+
   // Financial & Master Accounts Calculation
+  const activeGrossFee = activeStudents.reduce((sum, s) => sum + (s.totalFee || 0), 0);
+  const activeDiscount = activeStudents.reduce((sum, s) => sum + (s.discountAmount || 0), 0);
+  const activeNetFee = Math.max(0, activeGrossFee - activeDiscount);
+  const activeCollected = activeStudents.reduce((sum, s) => sum + (s.paidAmount || 0), 0);
+  const activePendingFees = activeStudents.reduce((sum, s) => {
+    const net = s.finalFee !== undefined ? s.finalFee : Math.max(0, (s.totalFee || 0) - (s.discountAmount || 0));
+    return sum + Math.max(0, net - (s.paidAmount || 0));
+  }, 0);
+
+  const terminatedPaidTotal = terminatedStudents.reduce((sum, s) => sum + (s.paidAmount || 0), 0);
+  const terminatedOutstandingTotal = terminatedStudents.reduce((sum, s) => {
+    const net = s.finalFee !== undefined ? s.finalFee : Math.max(0, (s.totalFee || 0) - (s.discountAmount || 0));
+    return sum + Math.max(0, net - (s.paidAmount || 0));
+  }, 0);
+
+  // Overall Financial Totals (Preserves historical revenue collection from active and terminated students)
   const totalGrossFee = students.reduce((sum, s) => sum + (s.totalFee || 0), 0);
   const totalDiscount = students.reduce((sum, s) => sum + (s.discountAmount || 0), 0);
   const totalNetFee = Math.max(0, totalGrossFee - totalDiscount);
   const totalCollected = students.reduce((sum, s) => sum + (s.paidAmount || 0), 0);
-  const totalPending = Math.max(0, totalNetFee - totalCollected);
+  const totalPending = activePendingFees; // Pending fees only for active students
 
   let cashCollected = 0;
   let onlineCollected = 0;
@@ -1248,7 +1547,21 @@ Bawra Skill House`;
               cursor: 'pointer'
             }}
           >
-            📋 Student Directory ({students.length})
+            📋 Student Directory ({activeStudents.length})
+          </button>
+          <button
+            onClick={() => setActiveSubTab('terminated')}
+            style={{
+              padding: '0.6rem 1.2rem',
+              borderRadius: '8px',
+              border: activeSubTab === 'terminated' ? 'none' : '1px solid #cbd5e1',
+              backgroundColor: activeSubTab === 'terminated' ? '#dc2626' : '#ffffff',
+              color: activeSubTab === 'terminated' ? '#ffffff' : '#334155',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            🛑 Terminated Students ({terminatedStudents.length})
           </button>
           <button
             onClick={() => {
@@ -1847,6 +2160,29 @@ Bawra Skill House`;
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                handleOpenTerminateModal(std);
+                              }}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                border: '1px solid #fca5a5',
+                                background: '#fef2f2',
+                                color: '#dc2626',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                              }}
+                              title="Terminate Student Registration"
+                            >
+                              🛑
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleDeleteStudent(std.id, std.fullName);
                               }}
                               style={{
@@ -1866,6 +2202,337 @@ Bawra Skill House`;
                               title="Delete Student"
                             >
                               🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================= TERMINATED STUDENTS FOLDER ================= */}
+      {activeSubTab === 'terminated' && (
+        <div className="no-print">
+          {/* Top Summary Cards for Terminated Folder */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem', marginBottom: '1.5rem' }}>
+            <div style={{ background: '#fef2f2', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #dc2626', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <span style={{ color: '#9f1239', fontSize: '0.8rem', fontWeight: '800' }}>TERMINATED STUDENTS</span>
+              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#dc2626' }}>{terminatedStudents.length}</h3>
+              <span style={{ fontSize: '0.78rem', color: '#9f1239' }}>Students in terminated folder</span>
+            </div>
+
+            <div style={{ background: '#f0fdf4', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #16a34a', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <span style={{ color: '#15803d', fontSize: '0.8rem', fontWeight: '800' }}>TOTAL PAID BY TERMINATED</span>
+              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#16a34a' }}>₹{terminatedPaidTotal.toLocaleString()}</h3>
+              <span style={{ fontSize: '0.78rem', color: '#15803d' }}>Historical payments preserved</span>
+            </div>
+
+            <div style={{ background: '#fff1f2', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #be123c', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <span style={{ color: '#9f1239', fontSize: '0.8rem', fontWeight: '800' }}>TERMINATED OUTSTANDING</span>
+              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#be123c' }}>₹{terminatedOutstandingTotal.toLocaleString()}</h3>
+              <span style={{ fontSize: '0.78rem', color: '#9f1239' }}>Excluded from active pending totals</span>
+            </div>
+          </div>
+
+          {/* Search & Filter Bar */}
+          <div style={{
+            display: 'flex',
+            justify: 'space-between',
+            marginBottom: '1rem',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search terminated student..."
+                value={terminatedSearchTerm}
+                onChange={(e) => setTerminatedSearchTerm(e.target.value)}
+                style={{
+                  padding: '0.6rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  width: '260px',
+                  fontSize: '0.88rem'
+                }}
+              />
+
+              <select
+                value={terminatedCourseFilter}
+                onChange={(e) => setTerminatedCourseFilter(e.target.value)}
+                style={{
+                  padding: '0.55rem 0.85rem',
+                  borderRadius: '8px',
+                  border: terminatedCourseFilter !== 'all' ? '2px solid #dc2626' : '1px solid #cbd5e1',
+                  backgroundColor: terminatedCourseFilter !== 'all' ? '#fef2f2' : '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: terminatedCourseFilter !== 'all' ? '#dc2626' : '#0f172a',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">🎓 All Courses</option>
+                {COURSE_OPTIONS.map(c => (
+                  <option key={c.name} value={c.name}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+
+              {(terminatedCourseFilter !== 'all' || terminatedDateFilterType !== 'all' || terminatedSingleDate || terminatedStartDate || terminatedEndDate || terminatedSearchTerm) && (
+                <button
+                  onClick={() => {
+                    setTerminatedCourseFilter('all');
+                    setTerminatedDateFilterType('all');
+                    setTerminatedSingleDate('');
+                    setTerminatedStartDate('');
+                    setTerminatedEndDate('');
+                    setTerminatedSearchTerm('');
+                  }}
+                  style={{
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid #fca5a5',
+                    background: '#fef2f2',
+                    color: '#dc2626',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Reset Filters
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#475569' }}>
+                📅 Filter Termination Date:
+              </span>
+
+              <select
+                value={terminatedDateFilterType}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTerminatedDateFilterType(val);
+                  if (val === 'single_day' && !terminatedSingleDate) {
+                    setTerminatedSingleDate(new Date().toISOString().split('T')[0]);
+                  }
+                }}
+                style={{
+                  padding: '0.55rem 0.9rem',
+                  borderRadius: '8px',
+                  border: terminatedDateFilterType !== 'all' ? '2px solid #dc2626' : '1px solid #cbd5e1',
+                  backgroundColor: terminatedDateFilterType !== 'all' ? '#fef2f2' : '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: terminatedDateFilterType !== 'all' ? '#dc2626' : '#0f172a',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">📅 All Time</option>
+                <option value="today">⚡ Today</option>
+                <option value="yesterday">⏪ Yesterday</option>
+                <option value="single_day">📆 Specific Date...</option>
+                <option value="7days">🗓️ Last 7 Days</option>
+                <option value="30days">🗓️ Last 30 Days</option>
+                <option value="this_month">📊 This Month</option>
+                <option value="custom">⚙️ Custom Range...</option>
+              </select>
+
+              {terminatedDateFilterType === 'single_day' && (
+                <input
+                  type="date"
+                  value={terminatedSingleDate}
+                  onChange={(e) => setTerminatedSingleDate(e.target.value)}
+                  style={{ padding: '0.35rem 0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                />
+              )}
+
+              {terminatedDateFilterType === 'custom' && (
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="date"
+                    value={terminatedStartDate}
+                    onChange={(e) => setTerminatedStartDate(e.target.value)}
+                    style={{ padding: '0.35rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                  />
+                  <span style={{ fontSize: '0.8rem' }}>to</span>
+                  <input
+                    type="date"
+                    value={terminatedEndDate}
+                    onChange={(e) => setTerminatedEndDate(e.target.value)}
+                    style={{ padding: '0.35rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                  />
+                </div>
+              )}
+
+              <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                Showing <strong>{filteredTerminatedStudents.length}</strong> terminated students
+              </span>
+            </div>
+          </div>
+
+          {filteredTerminatedStudents.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem',
+              backgroundColor: '#f8fafc',
+              borderRadius: '12px',
+              border: '2px dashed #cbd5e1'
+            }}>
+              <h3 style={{ color: '#0a0e29' }}>No Terminated Students Found</h3>
+              <p style={{ color: '#64748b' }}>No student records match your current terminated filter criteria.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid #fee2e2' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: '#7f1d1d', color: '#fff' }}>
+                    <th style={{ padding: '0.8rem 0.6rem', textAlign: 'center', width: '50px' }}>#</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Reg ID</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Student Name</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Phone</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Course(s)</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Applicable Fee</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Paid</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Outstanding Dues</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Terminated On</th>
+                    <th style={{ padding: '0.8rem 1rem' }}>Reason</th>
+                    <th style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTerminatedStudents.map((std, idx) => {
+                    const totalFee = std.totalFee || 0;
+                    const discount = std.discountAmount || 0;
+                    const netFee = std.finalFee !== undefined ? std.finalFee : Math.max(0, totalFee - discount);
+                    const paid = std.paidAmount || 0;
+                    const pending = Math.max(0, netFee - paid);
+
+                    return (
+                      <tr
+                        key={std.id}
+                        onClick={() => {
+                          setSelectedStudent(std);
+                          setActiveSubTab('view_student');
+                        }}
+                        style={{
+                          borderBottom: '1px solid #fee2e2',
+                          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fff5f5',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <td style={{ padding: '0.8rem 0.6rem', textAlign: 'center', fontWeight: 'bold', color: '#991b1b' }}>{idx + 1}</td>
+                        <td style={{ padding: '0.8rem 1rem', fontWeight: 'bold', color: '#dc2626' }}>{std.registrationId}</td>
+                        <td style={{ padding: '0.8rem 1rem', fontWeight: '600' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {std.studentPhotoUrl ? (
+                              <img
+                                src={std.studentPhotoUrl}
+                                alt={std.fullName}
+                                style={{
+                                  width: '44px',
+                                  height: '44px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '2px solid #ef4444',
+                                  flexShrink: 0
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '44px',
+                                  height: '44px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#991b1b',
+                                  color: '#fff',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: '800',
+                                  fontSize: '1.1rem',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {std.fullName ? std.fullName.charAt(0).toUpperCase() : 'S'}
+                              </div>
+                            )}
+                            <div>
+                              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#0f172a' }}>{std.fullName}</span>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#dc2626', fontWeight: '600' }}>🛑 TERMINATED</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem' }}>
+                          <div style={{ fontWeight: '600' }}>{std.mobile}</div>
+                          {std.city && <div style={{ fontSize: '0.75rem', color: '#0369a1' }}>📍 {std.city}</div>}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem' }}>
+                          {(std.courses || []).join(', ') || 'General'}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', fontWeight: '600' }}>
+                          ₹{netFee.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', color: '#16a34a', fontWeight: '800' }}>
+                          ₹{paid.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', color: '#dc2626', fontWeight: '800' }}>
+                          ₹{pending.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', fontSize: '0.85rem', fontWeight: '600', color: '#991b1b' }}>
+                          {std.terminationEffectiveDate || formatDateDDMMYYYY(std.terminatedAt) || 'N/A'}
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', fontSize: '0.82rem', color: '#475569', maxWidth: '200px' }}>
+                          <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={std.terminationReason || 'N/A'}>
+                            {std.terminationReason || '—'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedStudent(std);
+                                setActiveSubTab('view_student');
+                              }}
+                              style={{
+                                padding: '0.4rem 0.75rem',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                background: '#f8fafc',
+                                color: '#0f172a',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                              title="View complete original details and payment history"
+                            >
+                              💳 View Details
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenReactivateModal(std);
+                              }}
+                              style={{
+                                padding: '0.4rem 0.75rem',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: '#16a34a',
+                                color: '#ffffff',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                              title="Reactivate student and return to Active Directory"
+                            >
+                              🔄 Reactivate
                             </button>
                           </div>
                         </td>
@@ -2571,7 +3238,7 @@ Bawra Skill House`;
             </div>
           </div>
 
-          {/* Key Financial Cards (4 Cards Grid) */}
+          {/* Key Financial Cards (5 Cards Grid) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem', marginBottom: '1.5rem' }}>
             <div style={{ background: '#f8fafc', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #0a0e29', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '800' }}>TOTAL COURSE FEES (GROSS)</span>
@@ -2593,14 +3260,20 @@ Bawra Skill House`;
                 ₹{filteredCollectedTotal.toLocaleString()}
               </h3>
               <span style={{ fontSize: '0.78rem', color: '#15803d' }}>
-                {accountsDateFilterType === 'all' ? 'Total payments received to date' : 'Collections in selected period'}
+                {accountsDateFilterType === 'all' ? 'Total payments received to date (Active + Terminated)' : 'Collections in selected period'}
               </span>
             </div>
 
             <div style={{ background: '#fef2f2', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #dc2626', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-              <span style={{ color: '#b91c1c', fontSize: '0.8rem', fontWeight: '800' }}>REMAINING DUES (PENDING)</span>
-              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#dc2626' }}>₹{totalPending.toLocaleString()}</h3>
-              <span style={{ fontSize: '0.78rem', color: '#b91c1c' }}>Total pending balance across all students</span>
+              <span style={{ color: '#b91c1c', fontSize: '0.8rem', fontWeight: '800' }}>ACTIVE PENDING FEES</span>
+              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#dc2626' }}>₹{activePendingFees.toLocaleString()}</h3>
+              <span style={{ fontSize: '0.78rem', color: '#b91c1c' }}>Collectible dues from {activeStudents.length} active students</span>
+            </div>
+
+            <div style={{ background: '#fff1f2', padding: '1.2rem', borderRadius: '12px', borderLeft: '5px solid #be123c', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <span style={{ color: '#9f1239', fontSize: '0.8rem', fontWeight: '800' }}>TERMINATED OUTSTANDING</span>
+              <h3 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0 0', color: '#be123c' }}>₹{terminatedOutstandingTotal.toLocaleString()}</h3>
+              <span style={{ fontSize: '0.78rem', color: '#9f1239' }}>Excluded balance from {terminatedStudents.length} terminated students</span>
             </div>
           </div>
 
@@ -3473,6 +4146,55 @@ Bawra Skill House`;
       {/* ================= 4. STUDENT FEE & ACCOUNT PROFILE ================= */}
       {activeSubTab === 'view_student' && selectedStudent && (
         <div className="no-print" style={{ background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+          {/* Terminated Alert Banner if student is currently terminated */}
+          {selectedStudent.lifecycleStatus === 'terminated' && (
+            <div style={{
+              backgroundColor: '#fef2f2',
+              border: '2px solid #ef4444',
+              padding: '1rem 1.25rem',
+              borderRadius: '10px',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <div style={{ color: '#b91c1c', fontWeight: '800', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🛑 STUDENT STATUS: TERMINATED</span>
+                </div>
+                <div style={{ color: '#7f1d1d', fontSize: '0.88rem', marginTop: '0.3rem', lineHeight: '1.4' }}>
+                  <strong>Termination Effective Date:</strong> {selectedStudent.terminationEffectiveDate || 'N/A'}<br />
+                  <strong>Reason:</strong> {selectedStudent.terminationReason || 'No reason specified'}<br />
+                  {selectedStudent.terminationNotes && <span><strong>Admin Notes:</strong> {selectedStudent.terminationNotes}<br /></span>}
+                  <strong>Terminated By:</strong> {selectedStudent.terminatedBy || 'Admin'}
+                </div>
+              </div>
+              <div>
+                <button
+                  onClick={() => handleOpenReactivateModal(selectedStudent)}
+                  style={{
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.65rem 1.25rem',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    boxShadow: '0 4px 10px rgba(22, 163, 74, 0.3)'
+                  }}
+                >
+                  🔄 Reactivate Student
+                </button>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
               {selectedStudent.studentPhotoUrl ? (
@@ -3552,6 +4274,37 @@ Bawra Skill House`;
               >
                 💵 Record New Fee Payment
               </button>
+              {selectedStudent.lifecycleStatus !== 'terminated' ? (
+                <button
+                  onClick={() => handleOpenTerminateModal(selectedStudent)}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0.6rem 1.2rem',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🛑 Terminate Student
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleOpenReactivateModal(selectedStudent)}
+                  style={{
+                    backgroundColor: '#16a34a',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0.6rem 1.2rem',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Reactivate Student
+                </button>
+              )}
             </div>
           </div>
 
@@ -3716,6 +4469,67 @@ Bawra Skill House`;
                 ))}
               </tbody>
             </table>
+          )}
+
+          {/* Lifecycle & Termination History Logs */}
+          {selectedStudent.terminationHistory && selectedStudent.terminationHistory.length > 0 && (
+            <div style={{ marginTop: '2rem', padding: '1.2rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
+              <h3 style={{ margin: '0 0 1rem 0', color: '#0a0e29', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                📜 Lifecycle & Termination History ({selectedStudent.terminationHistory.length} Events)
+              </h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ background: '#e2e8f0', color: '#0f172a' }}>
+                      <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left' }}>Action</th>
+                      <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left' }}>Effective Date / Time</th>
+                      <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left' }}>Reason & Notes</th>
+                      <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left' }}>Admin Identity</th>
+                      <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left' }}>Fee Snapshot at Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedStudent.terminationHistory.map((h, hIdx) => (
+                      <tr key={h.id || hIdx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '0.6rem 0.8rem', fontWeight: 'bold' }}>
+                          <span style={{
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            backgroundColor: h.action === 'terminated' ? '#fee2e2' : '#dcfce7',
+                            color: h.action === 'terminated' ? '#991b1b' : '#15803d'
+                          }}>
+                            {h.action === 'terminated' ? '🛑 Terminated' : '🔄 Reactivated'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>
+                          {h.effectiveDate || 'N/A'}<br />
+                          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                            {h.timestamp ? new Date(h.timestamp).toLocaleString() : ''}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.6rem 0.8rem', color: '#334155' }}>
+                          <strong>{h.reason || '—'}</strong>
+                          {h.notes && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Notes: {h.notes}</div>}
+                        </td>
+                        <td style={{ padding: '0.6rem 0.8rem', color: '#475569', fontWeight: '600' }}>
+                          {h.adminBy || 'Admin'}
+                        </td>
+                        <td style={{ padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#334155' }}>
+                          {h.feeSnapshot ? (
+                            <div>
+                              Fee: ₹{(h.feeSnapshot.totalFee - h.feeSnapshot.discountAmount).toLocaleString()} |
+                              Paid: ₹{h.feeSnapshot.paidAmount.toLocaleString()} |
+                              Outstanding: ₹{h.feeSnapshot.pendingBalance.toLocaleString()}
+                            </div>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
           {/* Money Receipt Generator Action */}
@@ -4462,6 +5276,298 @@ Bawra Skill House`;
           </div>
         </div>
       )}
+
+      {/* ================= TERMINATE STUDENT MODAL ================= */}
+      {showTerminateModal && studentToTerminate && (() => {
+        const totalFee = studentToTerminate.totalFee || 0;
+        const discount = studentToTerminate.discountAmount || 0;
+        const netFee = studentToTerminate.finalFee !== undefined ? studentToTerminate.finalFee : Math.max(0, totalFee - discount);
+        const paid = studentToTerminate.paidAmount || 0;
+        const pending = Math.max(0, netFee - paid);
+        const coursesStr = Array.isArray(studentToTerminate.courses) ? studentToTerminate.courses.join(', ') : (studentToTerminate.courses || 'N/A');
+
+        return (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(10, 14, 41, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '14px',
+              padding: '2rem',
+              maxWidth: '520px',
+              width: '100%',
+              boxShadow: '0 12px 35px rgba(0,0,0,0.25)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '2px solid #fee2e2', paddingBottom: '0.75rem' }}>
+                <h3 style={{ margin: 0, color: '#dc2626', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🛑 Terminate Student Registration
+                </h3>
+                <button
+                  onClick={() => setShowTerminateModal(false)}
+                  style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Student Details Summary Box */}
+              <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '1rem', marginBottom: '1.2rem', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Student Name:</span>
+                  <strong style={{ color: '#0f172a' }}>{studentToTerminate.fullName}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Registration ID:</span>
+                  <strong style={{ color: '#2563eb' }}>{studentToTerminate.registrationId}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Course:</span>
+                  <strong style={{ color: '#0f172a' }}>{coursesStr}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Total Applicable Fee:</span>
+                  <strong>₹{netFee.toLocaleString()}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Total Paid:</span>
+                  <strong style={{ color: '#16a34a' }}>₹{paid.toLocaleString()}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.4rem', borderTop: '1px dashed #cbd5e1' }}>
+                  <span style={{ color: '#b91c1c', fontWeight: 'bold' }}>Current Outstanding Fee:</span>
+                  <strong style={{ color: '#dc2626', fontSize: '1.05rem' }}>₹{pending.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              {/* Mandatory Explanation Box */}
+              <div style={{
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                marginBottom: '1.2rem',
+                fontSize: '0.83rem',
+                color: '#1e40af',
+                lineHeight: '1.45'
+              }}>
+                ℹ️ <strong>Explanation:</strong> This student will move to Terminated Students. Their outstanding fee will be excluded from active pending totals. All student details and payment history will be preserved.
+              </div>
+
+              {/* Inputs */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.35rem', color: '#334155' }}>
+                  Termination Date *
+                </label>
+                <input
+                  type="date"
+                  value={terminationForm.effectiveDate}
+                  onChange={(e) => setTerminationForm({ ...terminationForm, effectiveDate: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.35rem', color: '#991b1b' }}>
+                  Termination Reason * (Required)
+                </label>
+                <textarea
+                  rows="2"
+                  required
+                  placeholder="Enter reason for termination (e.g. Discontinued course, personal reasons, non-payment)..."
+                  value={terminationForm.reason}
+                  onChange={(e) => setTerminationForm({ ...terminationForm, reason: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1.5px solid #fca5a5', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.35rem', color: '#334155' }}>
+                  Optional Admin Notes
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Enter optional office internal notes..."
+                  value={terminationForm.notes}
+                  onChange={(e) => setTerminationForm({ ...terminationForm, notes: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTerminateModal(false)}
+                  style={{
+                    padding: '0.65rem 1.3rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f1f5f9',
+                    color: '#334155',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmTermination}
+                  disabled={!terminationForm.reason.trim()}
+                  style={{
+                    padding: '0.65rem 1.3rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: !terminationForm.reason.trim() ? '#94a3b8' : '#dc2626',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    cursor: !terminationForm.reason.trim() ? 'not-allowed' : 'pointer',
+                    boxShadow: !terminationForm.reason.trim() ? 'none' : '0 4px 12px rgba(220, 38, 38, 0.3)'
+                  }}
+                >
+                  Confirm Termination
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ================= REACTIVATE STUDENT MODAL ================= */}
+      {showReactivateModal && studentToReactivate && (() => {
+        const totalFee = studentToReactivate.totalFee || 0;
+        const discount = studentToReactivate.discountAmount || 0;
+        const netFee = studentToReactivate.finalFee !== undefined ? studentToReactivate.finalFee : Math.max(0, totalFee - discount);
+        const paid = studentToReactivate.paidAmount || 0;
+        const pending = Math.max(0, netFee - paid);
+
+        return (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(10, 14, 41, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '14px',
+              padding: '2rem',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: '0 12px 35px rgba(0,0,0,0.25)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '2px solid #bbf7d0', paddingBottom: '0.75rem' }}>
+                <h3 style={{ margin: 0, color: '#15803d', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🔄 Reactivate Student Account
+                </h3>
+                <button
+                  onClick={() => setShowReactivateModal(false)}
+                  style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Student Details Summary Box */}
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '1rem', marginBottom: '1.2rem', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Student Name:</span>
+                  <strong style={{ color: '#0f172a' }}>{studentToReactivate.fullName}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ color: '#64748b' }}>Registration ID:</span>
+                  <strong style={{ color: '#2563eb' }}>{studentToReactivate.registrationId}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.4rem', borderTop: '1px dashed #bbf7d0' }}>
+                  <span style={{ color: '#15803d', fontWeight: 'bold' }}>Current Outstanding Fee to Return to Active Pending:</span>
+                  <strong style={{ color: '#16a34a', fontSize: '1.05rem' }}>₹{pending.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              {/* Notice Box */}
+              <div style={{
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                marginBottom: '1.2rem',
+                fontSize: '0.83rem',
+                color: '#1e40af',
+                lineHeight: '1.45'
+              }}>
+                ℹ️ <strong>Reactivation Notice:</strong> Reactivating this student will restore their active status, return them to the Student Directory, and include their current outstanding fee (₹{pending.toLocaleString()}) back in active pending totals. Earlier termination history will be preserved.
+              </div>
+
+              {/* Optional Notes */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.35rem', color: '#334155' }}>
+                  Optional Reactivation Notes
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Enter optional reactivation note..."
+                  value={reactivationForm.notes}
+                  onChange={(e) => setReactivationForm({ notes: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowReactivateModal(false)}
+                  style={{
+                    padding: '0.65rem 1.3rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f1f5f9',
+                    color: '#334155',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReactivation}
+                  style={{
+                    padding: '0.65rem 1.3rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)'
+                  }}
+                >
+                  Confirm Reactivation
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

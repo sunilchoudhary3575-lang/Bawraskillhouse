@@ -100,6 +100,42 @@ export const updateStudentInFirebase = async (studentId, updateData) => {
 };
 
 /**
+ * Terminate a student in Firestore
+ * @param {string} studentId 
+ * @param {Object} terminationData 
+ */
+export const terminateStudentInFirebase = async (studentId, terminationData) => {
+  try {
+    const studentRef = doc(db, 'students', studentId);
+    await updateDoc(studentRef, {
+      ...terminationData,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Error terminating student in Firestore:', err);
+    throw err;
+  }
+};
+
+/**
+ * Reactivate a student in Firestore
+ * @param {string} studentId 
+ * @param {Object} reactivationData 
+ */
+export const reactivateStudentInFirebase = async (studentId, reactivationData) => {
+  try {
+    const studentRef = doc(db, 'students', studentId);
+    await updateDoc(studentRef, {
+      ...reactivationData,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Error reactivating student in Firestore:', err);
+    throw err;
+  }
+};
+
+/**
  * Delete a student from Firestore
  * @param {string} studentId 
  */
