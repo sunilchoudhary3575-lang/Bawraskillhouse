@@ -61,7 +61,12 @@ export const StudentDocumentsModule = ({
     }
   };
 
-  // Helper chunk array into groups of 3 (for 3 cards per A4 Portrait page)
+  const batchStudents = students.filter(s => selectedBatchIds.includes(s.id));
+  const isFrontBatch = docType === 'id_card' && idPrintMode === 'batch' && idSide === 'front';
+  const batchLandscape = isFrontBatch && batchStudents.length > 6;
+  const cardsPerPage = isFrontBatch ? (batchLandscape ? 10 : 6) : 3;
+
+  // Keep the same layout on every page, including the last partial page.
   const chunkArray = (arr, size) => {
     const chunks = [];
     for (let i = 0; i < arr.length; i += size) {
@@ -72,17 +77,18 @@ export const StudentDocumentsModule = ({
 
   // Sync document body print orientation class (Landscape for Cert, Portrait for ID Card)
   useEffect(() => {
-    if (docType === 'certificate') {
+    if (docType === 'certificate' || batchLandscape) {
       document.body.classList.add('doc-print-landscape');
       document.body.classList.remove('doc-print-portrait');
     } else {
       document.body.classList.add('doc-print-portrait');
       document.body.classList.remove('doc-print-landscape');
     }
+    document.body.classList.toggle('doc-print-batch', docType === 'id_card' && idPrintMode === 'batch');
     return () => {
-      document.body.classList.remove('doc-print-landscape', 'doc-print-portrait');
+      document.body.classList.remove('doc-print-landscape', 'doc-print-portrait', 'doc-print-batch');
     };
-  }, [docType]);
+  }, [docType, idPrintMode, batchLandscape]);
 
   // Certificate Unique Identifier Generator
   const generateCertNo = (std) => {
@@ -239,13 +245,16 @@ export const StudentDocumentsModule = ({
 
   // Print Document Handler (triggers native browser print dialog with @media print CSS)
   const handlePrintDocument = async () => {
-    if (!selectedStudent) {
+    const isBatch = docType === 'id_card' && idPrintMode === 'batch';
+    if (isBatch ? batchStudents.length === 0 : !selectedStudent) {
       alert('Please select a student to print documents!');
       return;
     }
 
-    if (docType === 'id_card' && !hasPhoto) {
-      alert('⚠️ Photo Required for ID Card!\n\nStudent photograph is missing. Please edit student details and upload a photo before printing or downloading the Student ID Card.');
+    if (docType === 'id_card' && idSide !== 'back' && (isBatch
+      ? batchStudents.some(s => !(s.studentPhotoUrl || s.studentPhoto))
+      : !hasPhoto)) {
+      alert('⚠️ Photo Required for ID Card!\n\nA selected student photograph is missing. Please edit student details and upload a photo before printing or downloading the Student ID Card.');
       return;
     }
 
@@ -269,6 +278,10 @@ export const StudentDocumentsModule = ({
       }
     }
 
+    await document.fonts.ready;
+    await Promise.all([...document.querySelectorAll('.printable-document-active img')].map(img =>
+      img.decode ? img.decode().catch(() => {}) : Promise.resolve()
+    ));
     window.print();
   };
 
@@ -384,7 +397,7 @@ export const StudentDocumentsModule = ({
               <label>ID Print Mode</label>
               <select value={idPrintMode} onChange={(e) => setIdPrintMode(e.target.value)}>
                 <option value="single">Single Student ID Card</option>
-                <option value="batch">📦 Batch Multi-Student (3 Cards / A4 Sheet)</option>
+                <option value="batch">📦 Batch Multi-Student (Auto A4 Layout)</option>
               </select>
             </div>
 
@@ -506,14 +519,15 @@ export const StudentDocumentsModule = ({
                 ) : (
                   <div className="bsh-batch-preview-container">
                     {chunkArray(
-                      students.filter(s => selectedBatchIds.includes(s.id)),
-                      3
-                    ).map((groupOfThree, pageIdx) => (
-                      <div key={pageIdx} className="bsh-batch-a4-page">
+                      batchStudents,
+                      cardsPerPage
+                    ).map((pageStudents, pageIdx) => (
+                      <div key={pageIdx} className={`bsh-batch-a4-page ${isFrontBatch ? `bsh-front-sheet ${batchLandscape ? 'bsh-front-ten' : 'bsh-front-six'}` : ''}`}>
                         <div className="bsh-batch-page-header">
-                          PAGE {pageIdx + 1} OF {Math.ceil(selectedBatchIds.length / 3)} — A4 PORTRAIT SHEET ({groupOfThree.length} ID CARDS)
+                          PAGE {pageIdx + 1} OF {Math.ceil(batchStudents.length / cardsPerPage)} — A4 {batchLandscape ? 'LANDSCAPE' : 'PORTRAIT'} ({pageStudents.length} ID CARDS · {isFrontBatch ? (batchLandscape ? '5 × 2' : '2 × 3') : '3 PER PAGE'})
                         </div>
-                        {groupOfThree.map((std) => {
+                        <div className={isFrontBatch ? "bsh-front-grid" : "bsh-batch-rows"}>
+                        {pageStudents.map((std) => {
                           let regId = std.registrationId || std.studentId || '0033';
                           const digitsMatch = String(regId).match(/\d+$/);
                           if (digitsMatch) {
@@ -533,6 +547,7 @@ export const StudentDocumentsModule = ({
                             </div>
                           );
                         })}
+                        </div>
                       </div>
                     ))}
                   </div>
