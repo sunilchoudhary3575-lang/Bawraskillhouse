@@ -407,6 +407,7 @@ export const saveCertificateMetadataInFirebase = async (certData) => {
           certificateNumber: certData.certificateNumber,
           issueDate: certData.issueDate,
           courseName: certData.courseName,
+          duration: certData.duration || '45 DAYS',
           generatedAt: certData.generatedAt || new Date().toISOString()
         }
       }).catch(err => console.warn('Student record cert link notice:', err));

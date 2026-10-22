@@ -113,34 +113,64 @@ export const StudentDocumentsModule = ({
     batch: ''
   });
 
+  const prevStudentIdRef = useRef(null);
+
   // Sync form when selected student changes
   useEffect(() => {
-    if (selectedStudent) {
-      const defaultCourse = Array.isArray(selectedStudent.courses) && selectedStudent.courses.length > 0
-        ? selectedStudent.courses.join(' + ')
-        : (typeof selectedStudent.courses === 'string' ? selectedStudent.courses : 'VIDEO EDITING + GRAPHIC DESIGNING');
-
-      let defaultRegId = selectedStudent.registrationId || selectedStudent.studentId || '0033';
-      const digitsMatch = String(defaultRegId).match(/\d+$/);
-      if (digitsMatch) {
-        const numStr = digitsMatch[0];
-        defaultRegId = numStr.length >= 4 ? numStr.slice(-4) : numStr.padStart(4, '0');
-      }
-
-      setCertForm(prev => ({
-        ...prev,
-        certificateNumber: generateCertNo(selectedStudent),
-        courseName: defaultCourse,
-        issueDate: selectedStudent.signatureDate
-          ? selectedStudent.signatureDate.split('-').reverse().join('/')
-          : new Date().toLocaleDateString('en-GB')
-      }));
-
-      setIdOptions(prev => ({
-        ...prev,
-        studentId: defaultRegId
-      }));
+    if (!selectedStudent) {
+      prevStudentIdRef.current = null;
+      return;
     }
+
+    // Only re-initialize form if selected student actually changed by ID
+    // This prevents background Firestore updates or print triggers from resetting the user's edits
+    if (prevStudentIdRef.current === selectedStudent.id) {
+      return;
+    }
+    prevStudentIdRef.current = selectedStudent.id;
+
+    const lastCert = selectedStudent.lastCertificateGenerated;
+    const defaultCourse = (lastCert && lastCert.courseName)
+      ? lastCert.courseName
+      : (Array.isArray(selectedStudent.courses) && selectedStudent.courses.length > 0
+        ? selectedStudent.courses.join(' + ')
+        : (typeof selectedStudent.courses === 'string' ? selectedStudent.courses : 'VIDEO EDITING + GRAPHIC DESIGNING'));
+
+    let defaultRegId = selectedStudent.registrationId || selectedStudent.studentId || '0033';
+    const digitsMatch = String(defaultRegId).match(/\d+$/);
+    if (digitsMatch) {
+      const numStr = digitsMatch[0];
+      defaultRegId = numStr.length >= 4 ? numStr.slice(-4) : numStr.padStart(4, '0');
+    }
+
+    const defaultIssueDate = (lastCert && lastCert.issueDate)
+      ? lastCert.issueDate
+      : (selectedStudent.signatureDate
+          ? (selectedStudent.signatureDate.includes('-')
+              ? selectedStudent.signatureDate.split('-').reverse().join('/')
+              : selectedStudent.signatureDate)
+          : new Date().toLocaleDateString('en-GB'));
+
+    const defaultCertNo = (lastCert && lastCert.certificateNumber)
+      ? lastCert.certificateNumber
+      : generateCertNo(selectedStudent);
+
+    const defaultDuration = (lastCert && lastCert.duration)
+      ? lastCert.duration
+      : '45 DAYS';
+
+    setCertForm({
+      certificateNumber: defaultCertNo,
+      courseName: defaultCourse,
+      duration: defaultDuration,
+      issueDate: defaultIssueDate,
+      allowCourseEdit: false
+    });
+
+    setIdOptions(prev => ({
+      ...prev,
+      studentId: defaultRegId
+    }));
   }, [selectedStudent]);
 
   // Search input state inside document module
@@ -271,11 +301,10 @@ export const StudentDocumentsModule = ({
         generatedBy: 'Admin Portal'
       };
 
-      try {
-        await saveCertificateMetadataInFirebase(certMeta);
-      } catch (err) {
+      // Save metadata in background to Firestore without blocking print execution
+      saveCertificateMetadataInFirebase(certMeta).catch(err => {
         console.warn('Metadata save notice:', err);
-      }
+      });
     }
 
     await document.fonts.ready;
