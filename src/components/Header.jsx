@@ -52,6 +52,7 @@ export const Header = ({
               className={`nav-logo-link ${isDarkNav ? 'logo-badge-dark' : 'logo-badge-light'}`}
               onClick={(e) => {
                 e.preventDefault();
+                setIsMobileMenuOpen(false);
                 navigateTo('home');
               }}
               aria-label="Bawra Skill House Home"
@@ -80,7 +81,7 @@ export const Header = ({
             })}
           </nav>
 
-          {/* Actions: Enquiry Button, Admin Icon, Hamburger Toggle */}
+          {/* Actions: Enquiry Button, Admin Icon (Desktop only), Hamburger Toggle */}
           <div className="nav-actions-wrapper">
             <button
               className={`nav-btn-enquiry ${isDarkNav ? 'btn-enquiry-dark' : 'btn-enquiry-light'}`}
@@ -89,7 +90,7 @@ export const Header = ({
               Enquiry
             </button>
 
-            {/* Admin Panel Trigger */}
+            {/* Admin Panel Trigger (hidden on mobile navbar for cleanliness, accessible in mobile menu) */}
             <button
               className={`nav-admin-trigger ${isDarkNav ? 'admin-dark' : 'admin-light'}`}
               onClick={() => navigateTo('admin')}
@@ -103,55 +104,83 @@ export const Header = ({
               </svg>
             </button>
 
-            {/* Mobile Menu Toggle Button */}
+            {/* Mobile Menu Toggle Button with clean SVG icons */}
             <button
               className={`nav-mobile-toggle-btn ${isDarkNav ? 'toggle-dark' : 'toggle-light'}`}
               aria-label="Toggle navigation menu"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <span className={`nav-hamburger-icon ${isMobileMenuOpen ? 'open' : ''}`}></span>
+              {isMobileMenuOpen ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="nav-toggle-svg">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="nav-toggle-svg">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              )}
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Dropdown Panel (bawradigitals.com style floating pill) */}
-        {isMobileMenuOpen && (
-          <div className="mobile-menu-dropdown-pill">
-            <div className="mobile-menu-links-list">
-              {navLinks.map((link) => {
-                const active = currentPage === link.id;
-                return (
-                  <a
-                    key={link.id}
-                    href={`#${link.id}`}
-                    className={`mobile-nav-link ${active ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsMobileMenuOpen(false);
-                      navigateTo(link.id);
-                    }}
-                  >
-                    {link.label}
-                  </a>
-                );
-              })}
-
-              <div className="mobile-menu-bottom-cta">
-                <button
-                  className="btn-enroll-today"
-                  onClick={() => {
+      {/* Mobile Dropdown Panel (bawradigitals.com style floating pill) */}
+      {isMobileMenuOpen && (
+        <div className="mobile-menu-dropdown-pill">
+          <div className="mobile-menu-links-list">
+            {navLinks.map((link) => {
+              const active = currentPage === link.id;
+              return (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  className={`mobile-nav-link ${active ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
                     setIsMobileMenuOpen(false);
-                    triggerModal('General Consultation');
+                    navigateTo(link.id);
                   }}
-                  style={{ textDecoration: 'none', width: '100%', justifyContent: 'center' }}
                 >
-                  <span className="btn-enroll-text">Enroll Today</span>
-                </button>
-              </div>
+                  {link.label}
+                </a>
+              );
+            })}
+
+            {/* Mobile Admin Portal Entry */}
+            <a
+              href="#admin"
+              className={`mobile-nav-link mobile-admin-link ${currentPage === 'admin' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                navigateTo('admin');
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Admin Portal
+            </a>
+
+            <div className="mobile-menu-bottom-cta">
+              <button
+                className="btn-enroll-today"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  triggerModal('General Consultation');
+                }}
+                style={{ textDecoration: 'none', width: '100%', justifyContent: 'center' }}
+              >
+                <span className="btn-enroll-text">Enroll Today</span>
+              </button>
             </div>
           </div>
-        )}
-      </nav>
+        </div>
+      )}
     </header>
   );
 };
