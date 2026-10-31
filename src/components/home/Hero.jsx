@@ -73,6 +73,9 @@ export const Hero = ({ triggerModal, showPreloader }) => {
           <div className="hero-video-preloader-bg"></div>
         )}
 
+        {/* Top gradient overlay for seamless floating navbar readability */}
+        <div className="hero-video-top-gradient-overlay"></div>
+
         {/* Bottom gradient overlay to make buttons super readable */}
         <div className="hero-video-gradient-overlay"></div>
 
