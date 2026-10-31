@@ -1314,10 +1314,8 @@
   transform: translateX(-50%);
   z-index: 10;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
   width: 100%;
   max-width: 580px;
   padding: 0 1rem;
@@ -1329,12 +1327,6 @@
   justify-content: center;
   gap: 1.25rem;
   width: 100%;
-}
-
-.hero-video-controls-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .hero-btn-glow {
@@ -1355,31 +1347,38 @@
   border-color: var(--primary, #3d5cf8) !important;
 }
 
-.hero-control-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 50px;
-  background: rgba(10, 14, 41, 0.85);
+/* Sound Icon Button in Bottom Left Corner (Zero Extra Vertical Space) */
+.hero-sound-corner-btn {
+  position: absolute;
+  bottom: 40px;
+  left: 32px;
+  z-index: 15;
+}
+
+.hero-sound-icon-only-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(10, 14, 41, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  font-size: 0.82rem;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.25s ease;
-  user-select: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  padding: 0;
 }
 
-.hero-control-pill:hover {
+.hero-sound-icon-only-btn:hover {
   background: var(--gold-primary, #ff9a00);
   color: #000000;
   border-color: var(--gold-primary, #ff9a00);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 154, 0, 0.4);
+  transform: scale(1.08);
+  box-shadow: 0 4px 20px rgba(255, 154, 0, 0.45);
 }
 
 @media (max-width: 600px) {
@@ -1391,7 +1390,6 @@
 
   .hero-cinematic-actions {
     bottom: 25px;
-    gap: 0.65rem;
     padding: 0 1.25rem;
   }
 
@@ -1406,9 +1404,14 @@
     justify-content: center;
   }
 
-  .hero-control-pill {
-    padding: 6px 14px;
-    font-size: 0.76rem;
+  .hero-sound-corner-btn {
+    bottom: 25px;
+    left: 18px;
+  }
+
+  .hero-sound-icon-only-btn {
+    width: 38px;
+    height: 38px;
   }
 }
 
