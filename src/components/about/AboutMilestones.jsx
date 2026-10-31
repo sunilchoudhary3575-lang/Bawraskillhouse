@@ -86,32 +86,6 @@ export const AboutMilestones = () => {
             </svg>
           </div>
 
-          {/* Card 3: 6+ National Awards */}
-          <div className="milestone-card glass">
-            <div className="milestone-icon">🏆</div>
-            <div className="milestone-num">
-              <CountUp end={6} suffix="+" />
-            </div>
-            <h4>National Awards</h4>
-            <p>Honored nationally for outstanding digital content creation.</p>
-            {/* SVG Background Icon */}
-            <svg className="milestone-bg-icon award-bg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 4 4.9V19H8a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2h-3v-4.1a5 5 0 0 0 4-4.9V7a5 5 0 0 0-5-5zm-3 5a3 3 0 0 1 6 0v3a3 3 0 0 1-6 0V7zm-4 0a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4h1a6 6 0 0 1-4-5V8a1 1 0 0 0 0-1zm16 1v1a6 6 0 0 1-4 5h1a4 4 0 0 0 4-4V8a1 1 0 0 0-1-1 1 1 0 0 0-1 1z"/>
-            </svg>
-          </div>
-
-          {/* Card 4: Rajasthan Govt */}
-          <div className="milestone-card glass">
-            <div className="milestone-icon">🏛️</div>
-            <div className="milestone-num">Rajasthan Govt</div>
-            <h4>Official Recognition</h4>
-            <p>State-level creator recognition for educational impact.</p>
-            {/* SVG Background Icon */}
-            <svg className="milestone-bg-icon govt-bg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-            </svg>
-          </div>
-
           {/* Card 5: PM Invited */}
           <div className="milestone-card glass">
             <div className="milestone-icon">🇮🇳</div>
